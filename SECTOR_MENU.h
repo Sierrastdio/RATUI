@@ -18,5 +18,6 @@ int SECTOR_MENU(char *title, char *items[], int count, int *cursor_pos);
 
 // 이제 섹터별로 메인창 만들때마다 이거 추가해야됨.
 void ROS_MAIN_LOOP();
+void INS_MAIN_LOOP();
 
 #endif

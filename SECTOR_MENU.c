@@ -36,7 +36,8 @@ int SECTOR_MENU(char *title, char *items[], int count, int *cursor_pos) {
         return *cursor_pos; // 선택된 번호를 반환
     } 
     else if (ch == 'q' || ch == 'Q') {
-        return -1; // 종료 신호 (EXIT 대신 숫자로 명시)
+        endwin();
+        return 0;
     }
 
     return -2; // 아무 변화 없음 (다시 그려라)

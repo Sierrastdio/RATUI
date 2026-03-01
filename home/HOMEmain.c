@@ -3,8 +3,8 @@
 
 int main() {
     // 1. 사용할 메뉴 목록 정의 (문자열 배열)
-    char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[EXIT]", "[CANCEL]"};
-    int home_count = 6;
+    char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[EXIT]"};
+    int home_count = 5;
 
     int currentSEC = HOME;
     int cursor = 0; // 커서 위치 초기화
@@ -25,7 +25,10 @@ int main() {
                         ROS_MAIN_LOOP();    //ROSmain.c가 실행됨.
                         currentSEC = HOME;  //돌아오면 다시 HOME 상태로 유지   
                         break;
-                    case 1: currentSEC = INS;   break;
+                    case 1: 
+                        INS_MAIN_LOOP();
+                        currentSEC = HOME;  //돌아오면 다시 HOME 상태로 유지   
+                        break;
                     case 2: currentSEC = EDS;   break;
                     case 3: currentSEC = BKS;   break;
                     case 4: 
