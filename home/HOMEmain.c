@@ -21,7 +21,10 @@ int main() {
             if (result >= 0) {
                 // 홈 메뉴에서는 인덱스 순서대로 섹션을 배치했다고 가정
                 switch(result){
-                    case 0: currentSEC = ROS;   break;
+                    case 0: 
+                        ROS_MAIN_LOOP();    //ROSmain.c가 실행됨.
+                        currentSEC = HOME;  //돌아오면 다시 HOME 상태로 유지   
+                        break;
                     case 1: currentSEC = INS;   break;
                     case 2: currentSEC = EDS;   break;
                     case 3: currentSEC = BKS;   break;

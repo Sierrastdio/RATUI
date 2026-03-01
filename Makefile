@@ -7,7 +7,11 @@ LIBS = -lncurses
 TARGET = atp
 
 # 컴파일할 소스 파일들
-SRCS = home/homemain.c SECTOR_MENU.c
+SRCS = 	
+		SECTOR_MENU.c \
+		home/HOMEmain.c \
+		home/ROS/ROSmain.c \
+		home/INS/INSmain.c \
 
 # 빌드 규칙
 $(TARGET): $(SRCS)
