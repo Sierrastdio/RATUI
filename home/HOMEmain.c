@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdlib.h> // setenv 함수를 위해 필요
 #include "SECTOR_MENU.h"
 
 int main() {
@@ -8,6 +9,8 @@ int main() {
 
     int currentSEC = HOME;
     int cursor = 0; // 커서 위치 초기화
+
+    setenv("ESCDELAY", "25", 1);
 
     initscr();
     noecho();
