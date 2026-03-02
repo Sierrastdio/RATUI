@@ -3,7 +3,7 @@
 
 int main() {
     // 1. 사용할 메뉴 목록 정의 (문자열 배열)
-    char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[EXIT]"};
+    const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[EXIT]"};
     int home_count = 5;
 
     int currentSEC = HOME;

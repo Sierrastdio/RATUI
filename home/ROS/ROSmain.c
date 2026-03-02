@@ -2,7 +2,7 @@
 
 void ROS_MAIN_LOOP() {
     // 1. ROS 섹션에서만 쓸 메뉴들
-    char *ros_items[] = {
+    const char *ros_items[] = {
         "[1] Scan Directory", 
         "[2] File List View", 
         "[3] Copy to EDS", 

@@ -8,9 +8,13 @@ TARGET = atp
 
 # 컴파일할 소스 파일들
 SRCS = 	SECTOR_MENU.c 		\
+		FILE_CHECK.c		\
+		FILE_SEARCH.c		\
 		home/HOMEmain.c 	\
 		home/ROS/ROSmain.c 	\
 		home/INS/INSmain.c 	\
+		home/INS/INSfunc.c	\
+		home/INS/INSfunc.h	\
 # 빌드 규칙
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LIBS)
