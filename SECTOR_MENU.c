@@ -87,6 +87,11 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
             case 10: // ENTER 키
                 return *current_cursor;
 
+            case 'q':        // q 키를 누르면 취소
+            case 'Q':
+            case 27:    // ESC 키를 누르면 취소
+                return -1;   // 취소 신호로 -1 반환
+
             default:
                 break;
         }
