@@ -13,8 +13,10 @@ SRCS = 	SECTOR_MENU.c 		\
 		FILE_UTIL.c			\
 		home/HOMEmain.c 	\
 		home/ROS/ROSmain.c 	\
+		home/ROS/ROSfunc.c	\
 		home/INS/INSmain.c 	\
 		home/INS/INSfunc.c	\
+
 # 빌드 규칙
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LIBS)

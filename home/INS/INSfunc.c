@@ -1,10 +1,3 @@
-/*
- *  FILE_CHECK.h  FILE_SEARCH.h 와 INSfunc.h의 차이점은
- *  전자의 경우 다른 섹터에서도 쓰일수 있는 파일 검사, 검색 함수들인데 반해
- *  INSfunc.c는 INS 섹터 안에서만 쓰는 전용 기능이다.
- *
- */
-
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +5,7 @@
 #include "SECTOR_MENU.h"
 #include "FILE_CHECK.h"
 #include "FILE_SEARCH.h"
-#include "FILE_UTIL.h"   // FILE_MOVE 함수를 사용하기 위해 추가
+#include "FILE_UTIL.h"   
 #include "INSfunc.h"
 
 #define INGEST_PATH "./ingest_zone/"
@@ -25,7 +18,6 @@ void INSfunc_handle_file_add() {
 
     file_count = FILE_ALL_LIST_GET(INGEST_PATH, file_list, 100);
 
-    // file_count가 0 이하일 때 처리 보정
     if(file_count <= 0) {
         move(LINES - 2, 2); clrtoeol();
         attron(A_REVERSE);
@@ -49,6 +41,7 @@ void INSfunc_handle_file_add() {
         mvprintw(LINES - 4, 2, "Checking: %s", file_list[choice]);
         refresh();
 
+        // 1. 이미 같은 이름의 파일이 ROS에 있는 경우
         if (FILE_EXISTENCE_CHECK(dest_full_path)) {
             move(LINES - 3, 2); clrtoeol();
             mvprintw(LINES - 3, 2, "Duplicate name found. Running Deep Inspection...");
@@ -59,33 +52,35 @@ void INSfunc_handle_file_add() {
                 mvprintw(LINES - 2, 2, "CRITICAL: Identical file already exists in ROS! Cancelled.");
             } else {
                 move(LINES - 2, 2); clrtoeol();
-                mvprintw(LINES - 2, 2, "Notice: Same name but different content. Moving with prefix...");
-                // 실제 서비스라면 파일명 뒤에 _new 등을 붙이겠지만, 
-                // 우선은 덮어쓰거나 이동하는 로직이 필요합니다.
-                if (FILE_MOVE(src_full_path, dest_full_path)) {
-                     mvprintw(LINES - 1, 2, "SUCCESS: File Ingested (Overwritten/Updated).");
+                mvprintw(LINES - 2, 2, "Notice: Same name but different content. Updating...");
+                
+                // [수정] 복사 호출
+                if (FILE_COPY(src_full_path, dest_full_path)) {
+                     mvprintw(LINES - 1, 2, "SUCCESS: File Overwritten in ROS. Original kept.");
                 }
             }
-        } else {
-            // [수정 포인트] 중복이 없으면 실제로 파일을 옮겨야 합니다!
+        } 
+        // 2. 새로운 파일인 경우
+        else {
             move(LINES - 2, 2); clrtoeol();
-            mvprintw(LINES - 2, 2, "File is unique. Starting Ingest...");
+            mvprintw(LINES - 2, 2, "File is unique. Starting Ingest (Copy)...");
             refresh();
 
-            // FILE_UTIL.h에 정의된 FILE_MOVE 호출 (복사 후 원본 삭제)
-            if (FILE_MOVE(src_full_path, dest_full_path)) {
-                mvprintw(LINES - 1, 2, "SUCCESS: File moved to ROS Storage.");
+            // [수정 포인트] FILE_MOVE를 FILE_COPY로 변경하여 원본 유지
+            if (FILE_COPY(src_full_path, dest_full_path)) {
+                mvprintw(LINES - 1, 2, "SUCCESS: File copied to ROS Storage. Original remains in Ingest.");
             } else {
                 mvprintw(LINES - 1, 2, "ERROR: Ingest failed. Check permissions.");
             }
         }
     }
 
+    // 메모리 해제
     for (int i = 0; i < file_count; i++) {
         free(file_list[i]);
     }
 
-    move(LINES - 1, 22); // 메시지 뒤에 대기
+    move(LINES - 1, 22); 
     mvprintw(LINES - 1, 2, "Press any key...");
     refresh();
     getch();

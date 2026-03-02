@@ -66,34 +66,24 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
         switch (key) {
             case KEY_UP:
                 if (*current_cursor > 0) (*current_cursor)--;
-                else *current_cursor = count - 1; // 순환
+                else *current_cursor = count - 1;
                 break;
-
             case KEY_DOWN:
                 if (*current_cursor < count - 1) (*current_cursor)++;
-                else *current_cursor = 0; // 순환
+                else *current_cursor = 0;
                 break;
-
-            case KEY_PPAGE: // Page Up
-                *current_cursor -= MAX_VISIBLE;
-                if (*current_cursor < 0) *current_cursor = 0;
-                break;
-
-            case KEY_NPAGE: // Page Down
-                *current_cursor += MAX_VISIBLE;
-                if (*current_cursor >= count) *current_cursor = count - 1;
-                break;
-
-            case 10: // ENTER 키
+            // ... (PgUp/PgDn 로직 생략) ...
+            case 10: // ENTER (선택/진입)
                 return *current_cursor;
 
-            case 'q':        // q 키를 누르면 취소
-            case 'Q':
-            case 27:    // ESC 키를 누르면 취소
-                return -1;   // 취소 신호로 -1 반환
+            case 'd': // [추가] d키를 누르면 삭제 신호 -2 반환
+            case 'D':
+                return -2; 
 
-            default:
-                break;
+            case 'q':
+            case 'Q':
+            case 27:
+                return -1; // 취소 신호
         }
     }
 }

@@ -30,7 +30,15 @@ int main() {
                         currentSEC = HOME;  //돌아오면 다시 HOME 상태로 유지   
                         break;
                     case 2: currentSEC = EDS;   break;
+                        /*
+                        EDS_MAIN_LOOP();
+                        currentSEC = HOME;
+                        */
                     case 3: currentSEC = BKS;   break;
+                        /*
+                        BKS_MAIN_LOOP();
+                        currentSEC = HOME;
+                        */
                     case 4: 
                         currentSEC = EXIT;
                             // ncurses 종료
