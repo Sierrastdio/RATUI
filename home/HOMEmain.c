@@ -10,7 +10,7 @@ int main() {
     int currentSEC = HOME;
     int cursor = 0; // 커서 위치 초기화
 
-    setenv("ESCDELAY", "25", 1);
+    setenv("ESCDELAY", "25", 1);    /*ESC 키 반응 1000ms를 25ms로 줄여줌*/
 
     initscr();
     noecho();
@@ -32,16 +32,15 @@ int main() {
                         INS_MAIN_LOOP();
                         currentSEC = HOME;  //돌아오면 다시 HOME 상태로 유지   
                         break;
-                    case 2: currentSEC = EDS;   break;
-                        /*
+                    case 2: 
                         EDS_MAIN_LOOP();
                         currentSEC = HOME;
-                        */
-                    case 3: currentSEC = BKS;   break;
-                        /*
+                        break;
+
+                    case 3:
                         BKS_MAIN_LOOP();
                         currentSEC = HOME;
-                        */
+                        break;
                     case 4: 
                         currentSEC = EXIT;
                             // ncurses 종료

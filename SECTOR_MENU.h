@@ -4,6 +4,7 @@
 #include <ncurses.h>
 
 // 섹션 정의
+/**/
 #define HOME 0
 #define ROS  1
 #define INS  2
@@ -19,5 +20,7 @@ int SECTOR_MENU(const char *title, const char *items[], int count, int *cursor_p
 // 이제 섹터별로 메인창 만들때마다 이거 추가해야됨.
 void ROS_MAIN_LOOP();
 void INS_MAIN_LOOP();
+void EDS_MAIN_LOOP();
+void BKS_MAIN_LOOP();
 
 #endif

@@ -1,0 +1,34 @@
+#include <ncurses.h>
+#include "SECTOR_MENU.h"
+#include "EDSfunc.h"
+
+void EDS_MAIN_LOOP() {
+    const char *eds_items[] = {
+        "[1] 앙 기모띠",
+        "[2]",
+        "[3]",
+        "[BACK] To Home",
+    };
+    int eds_count = 4;
+    int eds_cursor = 0;
+
+    while(1) {
+        int result = SECTOR_MENU("EDS (Edit Sector )", eds_items, eds_count, &eds_cursor);
+
+        if(result == -1) return;
+
+        switch(result) {
+            case 0:
+                break;
+
+            case 1:
+                break;
+
+            case 2:
+                break;
+
+            case 3: 
+                return;
+        }
+    }
+}
