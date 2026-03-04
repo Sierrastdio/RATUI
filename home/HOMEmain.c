@@ -4,8 +4,8 @@
 
 int main() {
     // 1. 사용할 메뉴 목록 정의 (문자열 배열)
-    const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[EXIT]"};
-    int home_count = 5;
+    const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[TRS]", "[EXIT]"};
+    int home_count = 6;
 
     int currentSEC = HOME;
     int cursor = 0; // 커서 위치 초기화
@@ -41,12 +41,19 @@ int main() {
                         BKS_MAIN_LOOP();
                         currentSEC = HOME;
                         break;
-                    case 4: 
+
+                    case 4:
+                        TRS_MAIN_LOOP();
+                        currentSEC = HOME;
+                        break;
+                        
+                    case 5: 
                         currentSEC = EXIT;
                             // ncurses 종료
                             endwin();
                             return 0;
-                    case 5: currentSEC = CANCEL;    break;
+
+                    case 6: currentSEC = CANCEL;    break;
                 }
                 cursor = 0;
             }

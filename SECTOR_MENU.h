@@ -22,5 +22,6 @@ void ROS_MAIN_LOOP();
 void INS_MAIN_LOOP();
 void EDS_MAIN_LOOP();
 void BKS_MAIN_LOOP();
+void TRS_MAIN_LOOP();
 
 #endif
