@@ -1,0 +1,6 @@
+# config.txt
+INGEST_PATH=./ingest_zone/
+ROS_STORAGE=/media/sierra/TESarchive/ros_storage/
+EDS_STORAGE=/media/sierra/TESarchive/eds_storage/
+BKS_STORAGE=/media/sierra/TESarchive/bks_storage/
+TRS_STORAGE=/media/sierra/TESarchive/trs_storage/

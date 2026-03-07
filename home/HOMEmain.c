@@ -1,8 +1,14 @@
 #include <ncurses.h>
 #include <stdlib.h> // setenv 함수를 위해 필요
 #include "SECTOR_MENU.h"
+#include "PathConfig.h" // 경로 설정을 위해 헤더 포함
 
 int main() {
+
+    // 1. 프로그램 시작하자마자 설정 읽기 (최우선 순위)
+    LOAD_CONFIG();
+    ENSURE_DIRECTORIES(); // 모든 폴더는 이 함수가 알아서 만듦
+
     // 1. 사용할 메뉴 목록 정의 (문자열 배열)
     const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[TRS]", "[EXIT]"};
     int home_count = 6;

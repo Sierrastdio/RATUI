@@ -8,8 +8,14 @@
 #include "FILE_SEARCH.h"
 #include "FILE_UTIL.h"
 #include "ROSfunc.h"
+#include "PathConfig.h" // 경로 설정 헤더
 
-static char current_view_path[512] = "./ros_storage/";
+// [수정] static 초기값을 직접 주지 않고, main에서 호출한 LOAD_CONFIG 이후 값을 복사해야 합니다.
+static char current_view_path[512];
+// 초기화 함수 (필요 시)
+void INIT_ROS_PATH() {
+    strcpy(current_view_path, ROS_PATH);
+}
 
 static int is_directory(const char *path) {
     struct stat statbuf;
@@ -20,10 +26,8 @@ static int is_directory(const char *path) {
 void ROSfunc_manage_storage() {
     int cursor = 0; 
     
-    // 폴더가 없으면 자동 생성
-    if (access(current_view_path, F_OK) == -1) {
-        system("mkdir -p ./ros_storage");
-    }
+    // [추가] 진입 시마다 경로가 비어있으면 초기화
+    if (strlen(current_view_path) == 0) INIT_ROS_PATH();
 
     while (1) {
         char *raw_list[100];
@@ -42,14 +46,14 @@ void ROSfunc_manage_storage() {
             refresh();
             int ch = getch();
             if (ch == 27 || ch == 'q' || ch == 'Q') {
-                if (strcmp(current_view_path, "./ros_storage/") == 0) break;
+                if (strcmp(current_view_path, ROS_PATH) == 0) break;
                 else {
                     char *last = strrchr(current_view_path, '/');
                     if (last) {
                         *last = '\0';
                         last = strrchr(current_view_path, '/');
                         if (last) *(last + 1) = '\0';
-                        else strcpy(current_view_path, "./ros_storage/");
+                        else strcpy(current_view_path, ROS_PATH);
                     }
                     continue;
                 }
@@ -75,7 +79,7 @@ void ROSfunc_manage_storage() {
 
         // [결과 1] 취소 또는 상위 이동
         if (result == -1) {
-            if (strcmp(current_view_path, "./ros_storage/") == 0) {
+            if (strcmp(current_view_path, ROS_PATH) == 0) {
                 for (int i = 0; i < count; i++) { free(raw_list[i]); free(display_list[i]); }
                 break; 
             } else {
@@ -84,7 +88,7 @@ void ROSfunc_manage_storage() {
                     *last = '\0';
                     last = strrchr(current_view_path, '/');
                     if (last) *(last + 1) = '\0';
-                    else strcpy(current_view_path, "./ros_storage/");
+                    else strcpy(current_view_path, ROS_PATH);
                 }
             }
         }
@@ -123,7 +127,10 @@ void ROSfunc_show_info() {
     attron(A_REVERSE);
     mvprintw(1, 2, " === ROS STORAGE STATUS === ");
     attroff(A_REVERSE);
-    mvprintw(3, 4, "Current Root: ./ros_storage/");
+    
+    //하드코딩된 경로 대신 전역 변수 ROS_PATH 사용
+    mvprintw(3, 4, "Current Root: %s", ROS_PATH);
+    
     mvprintw(4, 4, "Control: [ENTER] to Enter DIR, [d] to Delete Any");
     mvprintw(LINES - 2, 2, "Press any key to return...");
     refresh();

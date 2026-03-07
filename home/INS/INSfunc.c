@@ -7,15 +7,15 @@
 #include "FILE_SEARCH.h"
 #include "FILE_UTIL.h"   
 #include "INSfunc.h"
+#include "PathConfig.h" // 경로 설정 헤더 포함
 
-#define INGEST_PATH "./ingest_zone/"
-#define STORAGE_PATH "./ros_storage/"
 
 void INSfunc_handle_file_add() {
     char *file_list[100];
     int file_count = 0;
     int cursor = 0;
 
+    // INGEST_PATH를 외부 변수로 사용
     file_count = FILE_ALL_LIST_GET(INGEST_PATH, file_list, 100);
 
     if(file_count <= 0) {
@@ -35,7 +35,7 @@ void INSfunc_handle_file_add() {
         char dest_full_path[512];
 
         sprintf(src_full_path, "%s%s", INGEST_PATH, file_list[choice]);
-        sprintf(dest_full_path, "%s%s", STORAGE_PATH, file_list[choice]);
+        sprintf(dest_full_path, "%s%s", ROS_PATH, file_list[choice]);
 
         move(LINES - 4, 2); clrtoeol();
         mvprintw(LINES - 4, 2, "Checking: %s", file_list[choice]);

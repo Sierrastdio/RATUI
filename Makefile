@@ -11,6 +11,7 @@ SRCS = 	SECTOR_MENU.c 		\
 		FILE_CHECK.c		\
 		FILE_SEARCH.c		\
 		FILE_UTIL.c			\
+		PathConfig.c		\
 							\
 		home/HOMEmain.c 	\
 							\

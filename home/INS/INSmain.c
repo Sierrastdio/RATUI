@@ -15,7 +15,7 @@ void INS_quick_duplicate_check();
 
 void INS_MAIN_LOOP() {
     // [보완] 프로그램 실행 시 필요한 폴더들이 있는지 확인하고 생성
-    system("mkdir -p ingest_zone ros_storage eds_zone bks_zone");
+    //system("mkdir -p ingest_zone ros_storage eds_zone bks_zone");
 
     const char *ins_items[] = {
         "[1] File add", 
