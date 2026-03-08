@@ -17,7 +17,7 @@ void INSfunc_handle_file_add() {
     if(file_count <= 0) {
         move(LINES - 2, 2); clrtoeol();
         attron(A_REVERSE);
-        mvprintw(LINES - 2, 2, "[SYSTEM] No files found in Ingest Zone.");
+        mvprintw(LINES - 2, 2, "[SYSTEM] No files found in Insert Zone.");
         attroff(A_REVERSE);
         refresh(); getch();
         return;

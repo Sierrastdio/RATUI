@@ -1,5 +1,5 @@
-# config.txt
-INGEST_PATH=./ingest_zone/
+# config.rtuconf
+INGEST_PATH=./insert_zone/
 ROS_STORAGE=/media/sierra/TESarchive/ros_storage/
 EDS_STORAGE=/media/sierra/TESarchive/eds_storage/
 BKS_STORAGE=/media/sierra/TESarchive/bks_storage/
