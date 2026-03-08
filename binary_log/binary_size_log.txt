@@ -12,3 +12,8 @@ sierra@sierra-X1-Carbon:~/문서/clone/rasp$ size atp
   20627    1016    3104   24747    60ab atp
 
 
+commit: 3dec26335b3ad324850ddb1975cb30bf83c5c7cf
+sierra@sierra-X1-Carbon:~/문서/clone/rasp$ size atp
+   text    data     bss     dec     hex filename
+  17508    1144    3104   21756    54fc atp
+

@@ -32,7 +32,7 @@ SRCS = 	src/SECTOR_MENU.c 		\
 		modules/TRS/TRSmain.c	\
 		modules/TRS/TRSfunc.c	\
 
-# 기존 실행 파일이 있다면 .bak으로 복사 후 빌드 진행
+# 기존 실행 파일이 있다면 .bak으로 복사 후 빌드 진행, binary_log의 데이터 수집을 위해 -s를 제거한 바이너리 먼저 만들고 이후 배포할때 다시 -s 붙이기.
 $(TARGET): $(SRCS)
 	@if [ -f $(TARGET) ]; then cp $(TARGET) $(TARGET).bak; fi
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LIBS) -s
