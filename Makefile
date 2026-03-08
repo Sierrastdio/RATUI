@@ -1,6 +1,6 @@
 # 컴파일러와 옵션 설정
 CC = gcc
-CFLAGS = -Wall -Os -ffunction-sections -fdata-sections -Wno-unused-result -Iinclude/
+CFLAGS = -Wall -Os -ffunction-sections -fdata-sections -Wno-unused-result -Iinclude/ -s
 LDFLAGS = -Wl,--gc-sections
 LIBS = -lncurses
 
@@ -16,14 +16,14 @@ all: $(TARGET)
 	@size $(TARGET) | tee build_size.log
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LIBS) $(LDFLAGS) -s
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LIBS) $(LDFLAGS) 
 	@echo "배포용 바이너리 생성 완료: $(TARGET)"
 
 # 2. 로깅용 빌드 (디버깅 데이터 수집용: -s 옵션 제외)
 # make log 로 실행
 log: clean
 	@if [ -f $(TARGET) ]; then cp $(TARGET) $(TARGET).bak; fi
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LIBS) $(LDFLAGS) -s
 	@echo "로깅용 바이너리 생성 완료 (심볼 포함)"
 	@size $(TARGET) >> build_size.log
 
