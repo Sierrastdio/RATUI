@@ -10,12 +10,13 @@
 #define INS  2
 #define EDS  3
 #define BKS  4
-#define EXIT 5
-#define CANCEL 6
+#define TRS  5
+#define EXIT 6
+#define CANCEL 7
 
 // 메뉴 동작을 담당하는 핵심 함수
 // 리턴값: 사용자가 선택한 섹션 번호
-int SECTOR_MENU(const char *title, const char *items[], int count, int *cursor_pos);
+int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id);
 
 // 이제 섹터별로 메인창 만들때마다 이거 추가해야됨.
 void ROS_MAIN_LOOP();

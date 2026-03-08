@@ -14,7 +14,7 @@ void BKS_MAIN_LOOP() {
     int bks_cursor = 0;
 
     while(1) {
-        int result = SECTOR_MENU("BKS(BackUp Storage)", bks_items, bks_count, &bks_cursor);
+        int result = SECTOR_MENU("BKS(BackUp Storage)", bks_items, bks_count, &bks_cursor, BKS);
         /*
         왜 &bks_cursor를 쓸까?
         SECTOR_MENU 함수가 실행되면서 사용자가 메뉴를 옮길 때마다 bks_cursor의 값을 업데이트해야 하기 때문입니다.

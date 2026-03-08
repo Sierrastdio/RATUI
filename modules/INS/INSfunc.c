@@ -24,7 +24,7 @@ void INSfunc_handle_file_add() {
     }
 
     int cursor = 0;
-    int choice = SECTOR_MENU("SELECT FILE TO INGEST", (const char **)file_list, file_count, &cursor);
+    int choice = SECTOR_MENU("SELECT FILE TO INGEST", (const char **)file_list, file_count, &cursor, INS);
 
     if (choice >= 0) {
         char src_full_path[1024], dest_full_path[1024];
@@ -51,7 +51,7 @@ void INSfunc_list() {
     int count = FILE_ALL_LIST_GET(INGEST_PATH, temp_list, 100);
     if (count > 0) {
         int cursor = 0;
-        SECTOR_MENU("CURRENT INGEST FILES", (const char**)temp_list, count, &cursor);
+        SECTOR_MENU("CURRENT INGEST FILES", (const char**)temp_list, count, &cursor, INS);
         for(int i = 0; i < count; i++) free(temp_list[i]);
     } else {
         move(LINES - 2, 2); clrtoeol();
@@ -69,7 +69,7 @@ void INS_copy_to_sector(const char *dest_path, const char *sector_name) {
     int cursor = 0;
     char title[64];
     snprintf(title, sizeof(title), "SELECT FILE TO COPY TO %s", sector_name);
-    int choice = SECTOR_MENU(title, (const char**)temp_list, count, &cursor);
+    int choice = SECTOR_MENU(title, (const char**)temp_list, count, &cursor, INS);
     
     if (choice >= 0) {
         char src_full[1024], dest_full[1024];
@@ -92,7 +92,7 @@ void INS_quick_duplicate_check() {
     if (count <= 0) return;
 
     int cursor = 0;
-    int choice = SECTOR_MENU("SELECT FILE TO SCAN", (const char**)temp_list, count, &cursor);
+    int choice = SECTOR_MENU("SELECT FILE TO SCAN", (const char**)temp_list, count, &cursor, INS);
     if (choice >= 0) {
         char src[1024], dest[1024];
         snprintf(src, sizeof(src), "%s%s", INGEST_PATH, temp_list[choice]);

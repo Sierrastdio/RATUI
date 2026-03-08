@@ -75,7 +75,7 @@ void ROSfunc_manage_storage() {
         sprintf(title, "EXPLORING: %s", current_view_path);
 
         // 3. 메뉴 호출
-        int result = SECTOR_MENU(title, (const char **)display_list, count, &cursor);
+        int result = SECTOR_MENU(title, (const char **)display_list, count, &cursor, ROS);
 
         // [결과 1] 취소 또는 상위 이동
         if (result == -1) {

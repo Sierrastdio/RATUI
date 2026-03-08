@@ -12,6 +12,7 @@ SRCS = 	src/SECTOR_MENU.c 		\
 		src/FILE_SEARCH.c		\
 		src/FILE_UTIL.c			\
 		src/PathConfig.c		\
+		src/help_UI.c			\
 								\
 		modules/home/HOMEmain.c \
 								\

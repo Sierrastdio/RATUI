@@ -13,7 +13,7 @@ void TRS_MAIN_LOOP() {
     int trs_cursor = 0;
 
     while(1) {
-        int result = SECTOR_MENU("TRS STORAGE MANAGEMENT", trs_items, trs_count, &trs_cursor);
+        int result = SECTOR_MENU("TRS STORAGE MANAGEMENT", trs_items, trs_count, &trs_cursor, TRS);
 
         if (result == -1) return;
 

@@ -15,7 +15,7 @@ void INS_MAIN_LOOP() {
     int ins_cursor = 0; 
 
     while (1) {
-        int result = SECTOR_MENU("INS(Ingest Sector) MANAGEMENT", ins_items, ins_count, &ins_cursor);
+        int result = SECTOR_MENU("INS(Ingest Sector) MANAGEMENT", ins_items, ins_count, &ins_cursor, INS);
 
         if (result == -1) return;
 

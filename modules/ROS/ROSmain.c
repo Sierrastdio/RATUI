@@ -13,7 +13,7 @@ void ROS_MAIN_LOOP() {
     int ros_cursor = 0;
 
     while(1) {
-        int result = SECTOR_MENU("ROS STORAGE MANAGEMENT", ros_items, ros_count, &ros_cursor);
+        int result = SECTOR_MENU("ROS STORAGE MANAGEMENT", ros_items, ros_count, &ros_cursor, ROS);
 
         if (result == -1) return;
 

@@ -13,7 +13,7 @@ void EDS_MAIN_LOOP() {
     int eds_cursor = 0;
 
     while(1) {
-        int result = SECTOR_MENU("EDS (Edit Sector )", eds_items, eds_count, &eds_cursor);
+        int result = SECTOR_MENU("EDS (Edit Sector )", eds_items, eds_count, &eds_cursor, EDS);
 
         if(result == -1) return;
 
