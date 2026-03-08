@@ -1,0 +1,14 @@
+
+(아래 커밋의 직전 상태)
+sierra@sierra-X1-Carbon:~/문서/clone/rasp$ size atp
+   text    data     bss     dec     hex filename
+  18629    1016    3104   22749    58dd atp
+
+
+
+commit: aa04a3b9d77062cc5457ded228828c4755f58df2
+sierra@sierra-X1-Carbon:~/문서/clone/rasp$ size atp
+   text    data     bss     dec     hex filename
+  20627    1016    3104   24747    60ab atp
+
+

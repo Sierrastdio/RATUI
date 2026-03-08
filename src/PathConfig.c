@@ -51,5 +51,5 @@ void ENSURE_DIRECTORIES() {
     char cmd[4096];
     // snprintf를 사용하면 버퍼 크기(sizeof(cmd))를 넘어서지 않도록 보장합니다.
     snprintf(cmd, sizeof(cmd), "mkdir -p \"%s\" \"%s\" \"%s\" \"%s\"", ROS_PATH, EDS_PATH, BKS_PATH, TRS_PATH);
-    system(cmd);
+    system(cmd); // 컴파일러 경고
 }

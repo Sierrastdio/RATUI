@@ -103,7 +103,7 @@ void ROSfunc_manage_storage() {
                 if (is_directory(target)) {
                     char cmd[1100];
                     sprintf(cmd, "rm -rf \"%s\"", target);
-                    system(cmd);
+                    system(cmd); // 컴파일러 경고
                 } else remove(target);
             }
         }
