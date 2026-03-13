@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "GIT_CMD.h"
 
 void DO_GIT_SYNC(const char *msg) {
