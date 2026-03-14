@@ -21,3 +21,7 @@ sierra@sierra-X1-Carbon:~/문서/clone/rasp$ size atp
 commit: 472ce31bf16aa5604c5c2415040fc5aaf775ecf7
    text	   data	    bss	    dec	    hex	filename
   16993	   1136	   3104	  21233	   52f1	atp
+
+commit: 8be3621cc2de80cec6fcbcf5385dd5ce66a0bd9c
+   text	   data	    bss	    dec	    hex	filename
+  16006	   1296	   3080	  20382	   4f9e	atp
