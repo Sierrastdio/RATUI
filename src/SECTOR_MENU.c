@@ -86,6 +86,10 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
             case 'Q':
             case 27:
                 return -1; // 취소 신호
+
+            case 'r':
+            case 'R':
+                return -3;
         }
     }
 }
