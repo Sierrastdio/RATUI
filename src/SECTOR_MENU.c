@@ -3,7 +3,7 @@
 #include "SECTOR_MENU.h"
 #include "help_UI.h"
 
-#define MAX_VISIBLE 15 
+#define MAX_VISIBLE 15  /*  한번에 표시할 항목 개수 최대 15개   */
 
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id) {
     int start_index = 0;
@@ -13,6 +13,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     noecho();
     curs_set(0);
 
+    /*  MAX_VISIBLE 보다 커서위치 값이 더 크면 처음 커서위치 = 0 으로 돌아가게 함.  */
     if (*current_cursor >= MAX_VISIBLE) {
         start_index = *current_cursor - (MAX_VISIBLE - 1);
     }
@@ -47,7 +48,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
         key = getch();
 
         if (key == '?') {
-            SHOW_HELP(sector_id); // 이제 int 값을 넘깁니다.
+            SHOW_HELP(sector_id);
             clear();
             refresh();
             continue;

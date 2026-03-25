@@ -3,8 +3,8 @@
 
 #include <ncurses.h>
 
-// 섹션 정의
-/**/
+
+/*  섹션 정의를 정수형으로 해서 값 비교 용이하도록 함   */
 #define HOME 0
 #define ROS  1
 #define INS  2
