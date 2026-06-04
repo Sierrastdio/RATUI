@@ -29,3 +29,12 @@ commit: 8be3621cc2de80cec6fcbcf5385dd5ce66a0bd9c
 
   text    data     bss     dec     hex filename
   17468    1144    3136   21748    54f4 atp
+
+
+
+commit: 47b0fccbefa40079069be21be9b79298340da193
+
+빌드 환경: x1 carbon gen 1 Endevour OS
+   text    data     bss     dec     hex filename
+  15937    1112    3128   20177    4ed1 atp
+

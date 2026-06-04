@@ -1,4 +1,4 @@
 #include <ncurses.h>
 #include "SECTOR_MENU.h"
 #include "TRSfunc.h"
-#include "PathConfig.h"
+#include "PATH_CONFIG.h"

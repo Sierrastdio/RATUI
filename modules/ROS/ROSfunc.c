@@ -8,7 +8,7 @@
 #include "FILE_SEARCH.h"
 #include "FILE_UTIL.h"
 #include "ROSfunc.h"
-#include "PathConfig.h" // 경로 설정 헤더
+#include "PATH_CONFIG.h" // 경로 설정 헤더
 
 // [수정] static 초기값을 직접 주지 않고, main에서 호출한 LOAD_CONFIG 이후 값을 복사해야 합니다.
 static char current_view_path[512];
