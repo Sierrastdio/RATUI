@@ -43,13 +43,23 @@
 - ncurses 라이브러리
 
 ### 빌드 방법
-```bash
+```fish
+# Makefile 로 빌드
 make
 ```
 
+```fish
+# meson 으로 빌드
+meson compile -C bin && meson compile -C bin atp_msg
+```
+
 ### 실행 방법
-```bash
-./atp
+```fish
+# Makefile 로 빌드 했다면:
+./make_rti
+
+# meson 으로 빌드 했다면:
+./meson_rti
 ```
 
 ### 청소
