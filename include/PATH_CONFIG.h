@@ -1,7 +1,7 @@
 #ifndef PATH_CONFIG_H
 #define PATH_CONFIG_H
 
-#define Config_FileName "config.rtuconf"
+#define Config_FileName "config.ratui"
 
 extern char INGEST_PATH[512]; //얘 폴더는 컴퓨터에 있음
 extern char ROS_PATH[512];
