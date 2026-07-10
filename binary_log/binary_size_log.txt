@@ -38,3 +38,10 @@ commit: 47b0fccbefa40079069be21be9b79298340da193
    text    data     bss     dec     hex filename
   15937    1112    3128   20177    4ed1 atp
 
+
+
+commit: 266a38b81f2f528128194388eea2261836dc1d5b
+
+빌드 환경: rog strix G513QM Windows OS, Debian WSL
+   text    data     bss     dec     hex filename
+  15310    1120    3168   19598    4c8e make_rti
