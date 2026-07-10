@@ -1,6 +1,6 @@
 # config.rtuconf
-INGEST_PATH=/home/sierra/다운로드/
-ROS_STORAGE=/home/sierra/문서/TESarchive/
-EDS_STORAGE=/home/sierra/문서/TESarchive_EDS/
-BKS_STORAGE=/home/sierra/문서/TESarchive_BKS/
-TRS_STORAGE=trash:/
+INGEST_PATH=/home/Sierrastdio/INS
+ROS_STORAGE=/home/Sierrastdio/ROS
+EDS_STORAGE=/home/Sierrastdio/EDS
+BKS_STORAGE=/home/Sierrastdio/BKS
+TRS_STORAGE=/home/Sierrastdio/TRS
