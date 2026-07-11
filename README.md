@@ -1,6 +1,6 @@
-# Language / 언어
+### Language / 언어
 * [English](#raspberry-archive-interface-ratui)
-* [한국어 (Korean)](#라즈베리-아카이브-인터페이스-ratui)
+* [한국어 (Korean)](#라즈베리-아카이브-인터페이스-raspberrypi-archive-terminaal_ui_interface-ratui)
 
 ---
 
