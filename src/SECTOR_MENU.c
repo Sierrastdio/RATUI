@@ -22,7 +22,13 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
         clear();
         attron(A_REVERSE);
         mvprintw(1, 2, " === %s (Total: %d) === ", title, count);
-        attroff(A_REVERSE)
+        attroff(A_REVERSE);
+
+        if (*current_cursor < start_index) {
+            start_index = *current_cursor;
+        } else if (*current_cursor >= start_index + MAX_VISIBLE) {
+            start_index = *current_cursor - MAX_VISIBLE + 1;
+        }
 
         for (int i = 0; i < MAX_VISIBLE && (start_index + i) < count; i++) {
             int idx = start_index + i;
@@ -47,7 +53,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
             refresh();
             continue;
         }
-        
+
         switch (key) {
             case KEY_UP:
                 if (*current_cursor > 0) (*current_cursor)--;
@@ -74,7 +80,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
 
             case 'd': // [추가] d키를 누르면 삭제 신호 -2 반환
             case 'D':
-                return -2; 
+                return -2;
 
             case 'q':
             case 'Q':
