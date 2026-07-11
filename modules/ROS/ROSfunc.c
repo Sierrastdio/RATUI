@@ -9,6 +9,8 @@
 #include "FILE_UTIL.h"
 #include "ROSfunc.h"
 #include "PATH_CONFIG.h" // 경로 설정 헤더
+#include "UI_PRINT.h"
+
 
 // [수정] static 초기값을 직접 주지 않고, main에서 호출한 LOAD_CONFIG 이후 값을 복사해야 합니다.
 static char current_view_path[512];
@@ -124,9 +126,8 @@ void ROSfunc_manage_storage() {
 
 void ROSfunc_show_info() {
     clear();
-    attron(A_REVERSE);
-    mvprintw(1, 2, " === ROS STORAGE STATUS === ");
-    attroff(A_REVERSE);
+
+    UI_PRINT_CENTER_HIGHLIGHT(1, " === ROS STORAGE STATUS === ");
     
     //하드코딩된 경로 대신 전역 변수 ROS_PATH 사용
     mvprintw(3, 4, "Current Root: %s", ROS_PATH);

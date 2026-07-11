@@ -22,13 +22,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
         clear();
         attron(A_REVERSE);
         mvprintw(1, 2, " === %s (Total: %d) === ", title, count);
-        attroff(A_REVERSE);
-
-        if (*current_cursor < start_index) {
-            start_index = *current_cursor;
-        } else if (*current_cursor >= start_index + MAX_VISIBLE) {
-            start_index = *current_cursor - MAX_VISIBLE + 1;
-        }
+        attroff(A_REVERSE)
 
         for (int i = 0; i < MAX_VISIBLE && (start_index + i) < count; i++) {
             int idx = start_index + i;
