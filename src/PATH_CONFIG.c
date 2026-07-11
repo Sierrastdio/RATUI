@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "PATH_CONFIG.h"
 
-#define Config_ext ".rtuconf"
+#define Config_ext ".ratui"
 
 // 1. 전역 변수 정의
 char INGEST_PATH[512] = "";
