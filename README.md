@@ -1,3 +1,95 @@
+# Language / 언어
+* [English](#raspberry-archive-interface-ratui)
+* [한국어 (Korean)](#라즈베리-아카이브-인터페이스-ratui)
+
+---
+
+# Raspberry Archive Interface (RATUI)
+
+## Introduction
+
+The Raspberry Pi Archive Interface (RATUI) is a lightweight, Text-based User Interface (TUI) application designed for Raspberry Pi. It provides functional assistance when utilizing a Raspberry Pi as a personal archive or private server.
+
+The project is written in C and implements a terminal-based interface using the `ncurses` library.
+
+## Key Features
+
+### 0. Module Features
+The project consists of several distinct modules:
+- `HOMEmain`: Main home interface
+- `ROS (ReadOnly)`: Resource management
+- `INS (Insert)`: File insertion and addition functions
+- `EDS (Edit)`: File editing functions
+- `BKS (Backup)`: Backup-related functions
+- `TRS (Trash)`: File transfer functions
+
+### 1. File Explorer System
+- Compact and intuitive file browsing capabilities
+- Efficient file system management
+
+### 2. File Management System
+- **Git Integration**: Execute Git commands and monitor status directly via the TUI (Under development)
+- **Custom Convenience Features**: Basic operations such as copying, moving, and deleting files
+
+### 3. Duplicate File Management
+- **Phase 1 Filter (File Size)**: Immediately excludes files with different sizes to minimize CPU overhead.
+- **Phase 2 Filter (Partial Bit Comparison)**: Compares the first and last 4KB of files to filter duplicate candidates.
+- **Phase 3 Confirmation (Hash Comparison)**: Full file hash comparison to ensure 100% match accuracy.
+
+### 4. Automatic Archive Compliance Rules
+- Applies automated protocols for compliant file archiving.
+
+## Installation & Build
+
+### Requirements
+- Makefile / Meson
+- GCC Compiler
+- ncurses library
+
+### How to Build
+```fish
+# Build using Makefile
+make
+```
+
+### Build using Meson
+```fish
+meson compile -C bin && meson compile -C bin atp_msg
+```
+
+### How to Run
+```fish
+# If built with Makefile:
+./make_rti
+
+# If built with Meson:
+./meson_rti
+```
+
+### Clean Build Artifacts
+```fish
+make clean
+```
+
+### Usage
+
+```txt
+# Edit the config.rtuconf file to specify the storage paths for your archive.
+# Example:
+
+# config.rtuconf
+INGEST_PATH=/home/Sierrastdio/INS
+ROS_STORAGE=/home/Sierrastdio/ROS
+EDS_STORAGE=/home/Sierrastdio/EDS
+BKS_STORAGE=/home/Sierrastdio/BKS
+TRS_STORAGE=/home/Sierrastdio/TRS
+```
+
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+
+
 # 라즈베리 아카이브 인터페이스 (Raspberrypi Archive Terminaal_UI_Interface RATUI)
 
 ## 소개
@@ -72,11 +164,12 @@ make clean
 #config.rtuconf 파일을 수정하여 아카이브로 쓸 저장장치의 경로를 작성하세요.
 #예):
 
-INGEST_PATH=./insert_zone/
-ROS_STORAGE=/media/sierra/TESarchive/ros_storage/
-EDS_STORAGE=/media/sierra/TESarchive/eds_storage/
-BKS_STORAGE=/media/sierra/TESarchive/bks_storage/
-TRS_STORAGE=/media/sierra/TESarchive/trs_storage/
+# config.rtuconf
+INGEST_PATH=/home/Sierrastdio/INS
+ROS_STORAGE=/home/Sierrastdio/ROS
+EDS_STORAGE=/home/Sierrastdio/EDS
+BKS_STORAGE=/home/Sierrastdio/BKS
+TRS_STORAGE=/home/Sierrastdio/TRS
 ```
 
 
