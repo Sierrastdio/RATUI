@@ -14,6 +14,11 @@
 #define EXIT 6
 #define CANCEL 7
 
+/* switch 문의 반환값 정의. 값의 이유는 */
+#define SIGN_CANCEL -1
+#define SIGN_DELETE -2
+#define SIGN_REFRESH -3
+
 // 메뉴 동작을 담당하는 핵심 함수
 // 리턴값: 사용자가 선택한 섹션 번호
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id);

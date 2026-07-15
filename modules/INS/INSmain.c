@@ -4,12 +4,12 @@
 
 void INS_MAIN_LOOP() {
     // [1] static으로 선언하여 함수를 나갔다 들어와도, r을 눌러도 커서 위치를 기억함
-    static int ins_cursor = 0; 
+    static int ins_cursor = 0;
 
     const char *ins_items[] = {
-        "[1] File add to ROS", 
-        "[2] INS File List View", 
-        "[3] Copy to EDS", 
+        "[1] File add to ROS",
+        "[2] INS File List View",
+        "[3] Copy to EDS",
         "[4] Clone to BackUp(BKS)",
         "[5] Check for File Duplication",
         "[BACK] To Home"
@@ -20,17 +20,15 @@ void INS_MAIN_LOOP() {
         // [2] SECTOR_MENU 호출 (ins_cursor의 주소 전달)
         int result = SECTOR_MENU("INS(Ingest Sector) MANAGEMENT", ins_items, ins_count, &ins_cursor, INS);
 
-        // ESC 또는 Q를 눌렀을 때 종료
-        if (result == -1) {
+        if (result == SIGN_CANCEL) {
             ins_cursor = 0; // 완전히 종료할 때만 커서 초기화 (선택 사항)
             return;
         }
 
-        // [3] r 키(새로고침) 처리: SECTOR_MENU에서 -3을 반환한다고 가정
-        if (result == -3) {
-            // 아무것도 안 하고 continue만 해도 static 변수 덕분에 
+        if (result == SIGN_REFRESH) {
+            // 아무것도 안 하고 continue만 해도 static 변수 덕분에
             // 현재 위치에서 메뉴가 다시 그려지며 '새로고침' 효과가 남
-            continue; 
+            continue;
         }
 
         // [4] 하위 기능 실행
@@ -43,11 +41,11 @@ void INS_MAIN_LOOP() {
             case 3: status = INS_copy_to_bks(); break;
             case 4: status = INS_quick_duplicate_check(); break;
             case 5: // [BACK] 선택 시
-                ins_cursor = 0; 
+                ins_cursor = 0;
                 return;
         }
 
         // 하위 메뉴에서 r을 눌러 -3이 반환되었다면 메인 메뉴도 즉시 갱신
-        if (status == -3) continue;
+        if (status == SIGN_REFRESH) continue;
     }
 }

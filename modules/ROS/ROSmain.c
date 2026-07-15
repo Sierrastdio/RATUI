@@ -4,9 +4,9 @@
 
 void ROS_MAIN_LOOP() {
     const char *ros_items[] = {
-        "[1] Storage Info & Status", 
-        "[2] Manage Stored Files (View/Delete)", 
-        "[3] Copy to EDS", 
+        "[1] Storage Info & Status",
+        "[2] Manage Stored Files (View/Delete)",
+        "[3] Copy to EDS",
         "[BACK] To Home"
     };
     int ros_count = 4;
@@ -15,7 +15,7 @@ void ROS_MAIN_LOOP() {
     while(1) {
         int result = SECTOR_MENU("ROS STORAGE MANAGEMENT", ros_items, ros_count, &ros_cursor, ROS);
 
-        if (result == -1) return;
+        if (result == SIGN_CANCEL) return;
 
         switch(result) {
             case 0: ROSfunc_show_info(); break;

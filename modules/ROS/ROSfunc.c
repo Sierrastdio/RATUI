@@ -11,9 +11,9 @@
 #include "PATH_CONFIG.h" // 경로 설정 헤더
 #include "UI_PRINT.h"
 
-
 // [수정] static 초기값을 직접 주지 않고, main에서 호출한 LOAD_CONFIG 이후 값을 복사해야 합니다.
 static char current_view_path[512];
+
 // 초기화 함수 (필요 시)
 void INIT_ROS_PATH() {
     strcpy(current_view_path, ROS_PATH);
@@ -26,23 +26,23 @@ static int is_directory(const char *path) {
 }
 
 void ROSfunc_manage_storage() {
-    int cursor = 0; 
-    
-    // [추가] 진입 시마다 경로가 비어있으면 초기화
+    int cursor = 0;
+
+    // 진입 시마다 경로가 비어있으면 초기화
     if (strlen(current_view_path) == 0) INIT_ROS_PATH();
 
     while (1) {
         char *raw_list[100];
         char *display_list[100];
-        
+
         // 1. 파일 리스트 가져오기
         int count = FILE_ALL_LIST_GET(current_view_path, raw_list, 100);
 
         // 폴더가 비었을 때 처리
         if (count <= 0) {
-            clear();     // [추가] 화면을 깨끗하게 지웁니다.
-            refresh();   // [추가] 지운 상태를 적용합니다.
-            
+            clear();     // 화면을 깨끗하게 지웁니다.
+            refresh();   // 지운 상태를 적용합니다.
+
             move(LINES - 2, 2); clrtoeol();
             mvprintw(LINES - 2, 2, "Empty Directory. [%s] (ESC: Back)", current_view_path);
             refresh();
@@ -68,7 +68,7 @@ void ROSfunc_manage_storage() {
             char full_temp[1024];
             sprintf(full_temp, "%s%s", current_view_path, raw_list[i]);
             display_list[i] = (char *)malloc(512);
-            
+
             if (is_directory(full_temp)) sprintf(display_list[i], "[DIR]  %s", raw_list[i]);
             else sprintf(display_list[i], "[FILE] %s", raw_list[i]);
         }
@@ -83,7 +83,7 @@ void ROSfunc_manage_storage() {
         if (result == -1) {
             if (strcmp(current_view_path, ROS_PATH) == 0) {
                 for (int i = 0; i < count; i++) { free(raw_list[i]); free(display_list[i]); }
-                break; 
+                break;
             } else {
                 char *last = strrchr(current_view_path, '/');
                 if (last) {
@@ -105,7 +105,9 @@ void ROSfunc_manage_storage() {
                 if (is_directory(target)) {
                     char cmd[1100];
                     sprintf(cmd, "rm -rf \"%s\"", target);
-                    system(cmd); // 컴파일러 경고
+                    if (system(cmd) == -1) {
+                        // 컴파일러 경고 방지
+                    }
                 } else remove(target);
             }
         }
@@ -127,13 +129,41 @@ void ROSfunc_manage_storage() {
 void ROSfunc_show_info() {
     clear();
 
-    UI_PRINT_CENTER_HIGHLIGHT(1, " === ROS STORAGE STATUS === ");
-    
-    //하드코딩된 경로 대신 전역 변수 ROS_PATH 사용
-    mvprintw(3, 4, "Current Root: %s", ROS_PATH);
-    
-    mvprintw(4, 4, "Control: [ENTER] to Enter DIR, [d] to Delete Any");
-    mvprintw(LINES - 2, 2, "Press any key to return...");
+    int mx = 0;
+    int my = 0;
+
+    // 1. 헤더 (역상 적용)
+    // " === ROS STORAGE STATUS === " 문자열의 길이를 직접 넘겨 좌표를 받음
+    int header_len = sizeof(" === ROS STORAGE STATUS === ") - 1;
+    mx = UI_GET_CENTER_X(mx, header_len);
+    my = (LINES / 2) - 3; // 단순 세로 수식
+
+    attron(A_REVERSE);
+    mvprintw(my, mx, " === ROS STORAGE STATUS === ");
+    attroff(A_REVERSE);
+
+    // 2. 루트 경로 표시 (가변 경로 대응 질문 핵심)
+    // "Current Root: "의 고정 크기와 가변적인 ROS_PATH의 길이를 더해서 한 번에 넘겨줌!
+    int total_path_len = (sizeof("Current Root: ") - 1) + (int)strlen(ROS_PATH);
+    mx = UI_GET_CENTER_X(mx, total_path_len);
+    my = (LINES / 2) - 1;
+
+    mvprintw(my, mx, "Current Root: %s", ROS_PATH);
+
+    // 3. 컨트롤 설명 표시
+    int desc_len = sizeof("Control: [ENTER] to Enter DIR, [d] to Delete Any") - 1;
+    mx = UI_GET_CENTER_X(mx, desc_len);
+    my = (LINES / 2) + 1;
+
+    mvprintw(my, mx, "Control: [ENTER] to Enter DIR, [d] to Delete Any");
+
+    // 4. 하단 안내문
+    int footer_len = sizeof("Press any key to return...") - 1;
+    mx = UI_GET_CENTER_X(mx, footer_len);
+    my = LINES - 2;
+
+    mvprintw(my, mx, "Press any key to return...");
+
     refresh();
     getch();
 }

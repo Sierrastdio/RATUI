@@ -3,7 +3,7 @@
 # ==========================================
 CC      := gcc
 CFLAGS  := -Wall -Wextra -Os -ffunction-sections -fdata-sections -Wno-unused-result -Iinclude
-LDFLAGS := -Wl,--gc-sections
+LDFLAGS := -Wl,--gc-sections -Wl,--as-needed
 LIBS    := -lncurses
 
 # 생성할 최종 실행 파일 이름

@@ -4,9 +4,9 @@
 
 void TRS_MAIN_LOOP() {
     const char *trs_items[] = {
-        "[1] ", 
-        "[2] ", 
-        "[3] ", 
+        "[1] ",
+        "[2] ",
+        "[3] ",
         "[BACK] To Home"
     };
     int trs_count = 4;
@@ -15,7 +15,7 @@ void TRS_MAIN_LOOP() {
     while(1) {
         int result = SECTOR_MENU("TRS STORAGE MANAGEMENT", trs_items, trs_count, &trs_cursor, TRS);
 
-        if (result == -1) return;
+        if (result == SIGN_CANCEL) return;
 
         switch(result) {
             case 0:  break;

@@ -15,7 +15,7 @@ void EDS_MAIN_LOOP() {
     while(1) {
         int result = SECTOR_MENU("EDS (Edit Sector )", eds_items, eds_count, &eds_cursor, EDS);
 
-        if(result == -1) return;
+        if(result == SIGN_CANCEL) return;
 
         switch(result) {
             case 0:
@@ -27,7 +27,7 @@ void EDS_MAIN_LOOP() {
             case 2:
                 break;
 
-            case 3: 
+            case 3:
                 return;
         }
     }

@@ -2,7 +2,7 @@
 #include <string.h>
 #include "SECTOR_MENU.h"
 #include "help_UI.h"
-#include "UI_PRINT.h"
+//#include "UI_PRINT.h"
 
 #define MAX_VISIBLE 15  /*  한번에 표시할 항목 개수 최대 15개   */
 
@@ -21,13 +21,11 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
 
     while (1) {
         clear();
-        /*/
+
         attron(A_REVERSE);
         mvprintw(1, 2, " === %s (Total: %d) === ", title, count);
         attroff(A_REVERSE);
-        */
 
-        UI_PRINT_CENTER_HIGHLIGHT(2, title);
 
         if (*current_cursor < start_index) {
             start_index = *current_cursor;
@@ -85,16 +83,16 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
 
             case 'd': // [추가] d키를 누르면 삭제 신호 -2 반환
             case 'D':
-                return -2;
+                return SIGN_DELETE;
 
             case 'q':
             case 'Q':
-            case 27:
-                return -1; // 취소 신호
+            case 27: //27 means 'ESC'
+                return SIGN_CANCEL;
 
             case 'r':
             case 'R':
-                return -3;
+                return SIGN_REFRESH; // 리프레시 신호
         }
     }
 }
