@@ -24,4 +24,8 @@
 
 - `<sector>main.c` : `SECTOR_MENU` 양식에 맞춰서 각 섹터 화면에 표기할 내용이나, `<sector>func.c`에서 정의한, **함수** 들을 각 `SECTOR_MENU`의 함수의 **반환값**에 맞게 배치합니다.
 
-- `
+### 함수 설명
+
+- `SECTOR_MENU()` , 또는 `FILE_CHECK()` 과 같은 함수는 `src/` 의 라이브러리들에서 정의된 함수들입니다.
+
+- `ROSfunc_manage_storage()`, 또는 `ROSfunc_show_info()`, `INSfunc_handle_file_add()`과 **같은 형태** 함수는 `<sector>func.c`에서 정의된 함수입니다.
