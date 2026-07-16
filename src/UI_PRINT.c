@@ -5,6 +5,13 @@
 int UI_Center_x = 0;
 int UI_Center_y = 0;
 
+int UI_Win_Width = 0;
+int UI_Win_Height = 0;
+int UI_Start_Y = 0;
+int UI_Left_X = 0;
+int UI_Right_X = 0;
+
+// 기존 안전 분기 로직을 완벽히 유지한 텍스트 중앙 X좌표 계산 함수 (int 반환)
 int UI_GET_CENTER_X(int textlen)
 {
     if (textlen <= 0) {
@@ -21,13 +28,32 @@ int UI_GET_CENTER_X(int textlen)
     return UI_Center_x;
 }
 
-// [링킹 에러 해결] 실제 윈도우 생성 및 테두리 헬퍼 함수 구현체
+// 현재 시스템 터미널(LINES, COLS) 기준 전체 분할 UI 레이아웃 크기를 일괄 계산 및 갱신
+void UI_INIT_LAYOUT(void)
+{
+    int total_usable_w = COLS - 4;
+    if (total_usable_w < 2) total_usable_w = 2; // 최소 안전폭 확보
+
+    UI_Win_Width = total_usable_w / 2;
+    UI_Win_Height = LINES - 6;
+    if (UI_Win_Height < 3) UI_Win_Height = 3; // 타이틀 겹침 방지 최소 높이 확보
+
+    UI_Start_Y = 2;
+    UI_Left_X = 2;
+    UI_Right_X = UI_Left_X + UI_Win_Width;
+}
+
+// 기존 테두리(box) 및 물리 화면 투영(wrefresh) 스타일을 완벽히 계승한 윈도우 생성 헬퍼 함수
 WINDOW *UI_CREATE_WINDOW(int height, int width, int start_y, int start_x)
 {
     WINDOW *win = newwin(height, width, start_y, start_x);
     if (win == NULL) return NULL;
 
-    box(win, 0, 0); // 테두리 치기
+    box(win, 0, 0); // 기존 스타일대로 초기 테두리 형성
     wrefresh(win);  // 물리 화면에 즉시 투영
+
+    // 키패드 매핑 활성화 (메뉴 내부 wgetch 동작용)
+    keypad(win, TRUE);
+
     return win;
 }
