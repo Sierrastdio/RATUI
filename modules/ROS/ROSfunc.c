@@ -78,10 +78,11 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
         sprintf(title, "EXPLORING: %s", current_view_path);
 
         // 3. 우측 데이터 윈도우 안에서 리스트 표출 및 커서 처리
-        int result = SECTOR_MENU_WIN(data_win, title, (const char **)display_list, count, &cursor, 40);
+        // SIGN_LEFT_ALIGN 지표를 전달하여 좌측 정렬 유도
+        int result = SECTOR_MENU_WIN(data_win, title, (const char **)display_list, count, &cursor, SIGN_LEFT_ALIGN);
 
         // [결과 1] 취소 또는 상위 이동
-        if (result == -1) {
+        if (result == SIGN_CANCEL) {
             if (strcmp(current_view_path, ROS_PATH) == 0) {
                 for (int i = 0; i < count; i++) { free(raw_list[i]); free(display_list[i]); }
                 break;
@@ -96,7 +97,7 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             }
         }
         // [결과 2] d키로 삭제
-        else if (result == -2) {
+        else if (result == SIGN_DELETE) {
             char target[1024];
             sprintf(target, "%s%s", current_view_path, raw_list[cursor]);
 
@@ -169,7 +170,7 @@ void ROSfunc_show_info(WINDOW *data_win) {
 
     wrefresh(data_win);
 
-    // [수정 핵심] 루프를 돌면서 ESC(27), q, Q 이외의 키 입력(방향키 등)은 무시하게 막음
+    // 루프를 돌면서 ESC(27), q, Q 이외의 키 입력(방향키 등)은 무시하게 막음
     keypad(data_win, TRUE);
     while (1) {
         int ch = wgetch(data_win);

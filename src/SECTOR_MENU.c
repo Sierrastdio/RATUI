@@ -104,27 +104,41 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     }
 }
 
-// [수정 완료] switch-case 구조로 완전히 리팩토링된 윈도우 전용 메뉴 기능
 int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int count, int *cursor, int max_len) {
     int win_width = getmaxx(win);
     int win_height = getmaxy(win);
 
-    int menu_start_x = (win_width - max_len) / 2;
-    if (menu_start_x < 1) menu_start_x = 1;
+    int menu_start_x;
+    int start_y;
 
-    int start_y = (win_height / 2) - (count / 2);
-    if (start_y < 3) start_y = 3;
+    // [레이아웃 연동 핵심] 좌측 정렬 규칙(SIGN_LEFT_ALIGN)일 때 좌표 초기화 설정
+    if (max_len == SIGN_LEFT_ALIGN) {
+        menu_start_x = 4; // 좌측에서 4칸 띄우기
+        start_y = 3;      // 타이틀(1라인) 아래 여백을 두고 3라인부터 차례대로 출력
+    } else {
+        // 기존 중앙 정렬 레이아웃 방식 유지
+        menu_start_x = (win_width - max_len) / 2;
+        if (menu_start_x < 1) menu_start_x = 1;
+
+        start_y = (win_height / 2) - (count / 2);
+        if (start_y < 3) start_y = 3;
+    }
 
     werase(win);
     box(win, 0, 0);
 
+    // 상단 중앙 타이틀 출력
     int title_x = (win_width - (int)strlen(title)) / 2;
     if (title_x < 1) title_x = 1;
     wattron(win, A_REVERSE);
     mvwprintw(win, 1, title_x, "%s", title);
     wattroff(win, A_REVERSE);
 
+    // 목록 출력 루프 (start_y 기준으로 아래로 차례차례 정렬됨)
     for (int i = 0; i < count; i++) {
+        // 데이터 창 높이를 넘어가지 않도록 안전 제어문 추가
+        if (start_y + i >= win_height - 1) break;
+
         if (i == *cursor) {
             wattron(win, A_REVERSE);
             mvwprintw(win, start_y + i, menu_start_x, "%s", items[i]);
@@ -139,9 +153,8 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     keypad(win, TRUE);
     int ch = wgetch(win);
 
-    // 깔끔하게 정돈된 키 분기 처리 스위치문
     switch (ch) {
-        case 27: // ESC
+        case 27:
             return SIGN_CANCEL;
 
         case KEY_UP:
