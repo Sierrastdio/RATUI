@@ -3,7 +3,11 @@
 
 #include <ncurses.h>
 
-// 주어진 텍스트 길이를 기준으로 가로 중앙 정렬 시작 X 좌표를 반환하는 함수 원형
-int UI_GET_CENTER_X(int x, int textlen);
+// 전역 공유 좌표 변수 선언
+extern int UI_Center_x;
+extern int UI_Center_y;
+
+// 이제 인자로 x를 받지 않고, 내부에서 UI_mx를 직접 제어/반환함
+int UI_GET_CENTER_X(int textlen);
 
 #endif

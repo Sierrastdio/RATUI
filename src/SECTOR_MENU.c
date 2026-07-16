@@ -2,7 +2,7 @@
 #include <string.h>
 #include "SECTOR_MENU.h"
 #include "help_UI.h"
-//#include "UI_PRINT.h"
+#include "UI_PRINT.h"
 
 #define MAX_VISIBLE 15  /*  한번에 표시할 항목 개수 최대 15개   */
 
@@ -22,10 +22,22 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     while (1) {
         clear();
 
-        attron(A_REVERSE);
-        mvprintw(1, 2, " === %s (Total: %d) === ", title, count);
-        attroff(A_REVERSE);
+        // 1. 고정 문자열 크기 + 가변 title 길이 합산
+        int title_len = (sizeof(" ===  (Total: ) === ") - 1) + (int)strlen(title);
 
+        // 2. 순수 나눗셈 루프로 자릿수 합산
+        int temp_count = count;
+        do {
+           title_len++;
+           temp_count /= 10;
+        } while (temp_count > 0);
+
+        // 3. 인자로 길이만 던지면 UI_Center_x가 자동으로 갱신됨
+        UI_GET_CENTER_X(title_len);
+
+        attron(A_REVERSE);
+        mvprintw(1, UI_Center_x, " === %s (Total: %d) === ", title, count);
+        attroff(A_REVERSE);
 
         if (*current_cursor < start_index) {
             start_index = *current_cursor;

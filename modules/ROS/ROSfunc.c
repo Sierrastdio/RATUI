@@ -129,40 +129,37 @@ void ROSfunc_manage_storage() {
 void ROSfunc_show_info() {
     clear();
 
-    int mx = 0;
-    int my = 0;
-
     // 1. 헤더 (역상 적용)
-    // " === ROS STORAGE STATUS === " 문자열의 길이를 직접 넘겨 좌표를 받음
+    // " === ROS STORAGE STATUS === " 문자열의 길이를 직접 넘겨 좌표를 계산하고 UI_Center_x에 세팅
     int header_len = sizeof(" === ROS STORAGE STATUS === ") - 1;
-    mx = UI_GET_CENTER_X(mx, header_len);
-    my = (LINES / 2) - 3; // 단순 세로 수식
+    UI_GET_CENTER_X(header_len);
+    UI_Center_y = (LINES / 2) - 3; // 단순 세로 수식
 
     attron(A_REVERSE);
-    mvprintw(my, mx, " === ROS STORAGE STATUS === ");
+    mvprintw(UI_Center_y, UI_Center_x, " === ROS STORAGE STATUS === ");
     attroff(A_REVERSE);
 
-    // 2. 루트 경로 표시 (가변 경로 대응 질문 핵심)
-    // "Current Root: "의 고정 크기와 가변적인 ROS_PATH의 길이를 더해서 한 번에 넘겨줌!
+    // 2. 루트 경로 표시
+    // "Current Root: "의 고정 크기와 가변적인 ROS_PATH의 길이를 더해서 한 번에 넘겨줌
     int total_path_len = (sizeof("Current Root: ") - 1) + (int)strlen(ROS_PATH);
-    mx = UI_GET_CENTER_X(mx, total_path_len);
-    my = (LINES / 2) - 1;
+    UI_GET_CENTER_X(total_path_len);
+    UI_Center_y = (LINES / 2) - 1;
 
-    mvprintw(my, mx, "Current Root: %s", ROS_PATH);
+    mvprintw(UI_Center_y, UI_Center_x, "Current Root: %s", ROS_PATH);
 
     // 3. 컨트롤 설명 표시
     int desc_len = sizeof("Control: [ENTER] to Enter DIR, [d] to Delete Any") - 1;
-    mx = UI_GET_CENTER_X(mx, desc_len);
-    my = (LINES / 2) + 1;
+    UI_GET_CENTER_X(desc_len);
+    UI_Center_y = (LINES / 2) + 1;
 
-    mvprintw(my, mx, "Control: [ENTER] to Enter DIR, [d] to Delete Any");
+    mvprintw(UI_Center_y, UI_Center_x, "Control: [ENTER] to Enter DIR, [d] to Delete Any");
 
     // 4. 하단 안내문
     int footer_len = sizeof("Press any key to return...") - 1;
-    mx = UI_GET_CENTER_X(mx, footer_len);
-    my = LINES - 2;
+    UI_GET_CENTER_X(footer_len);
+    UI_Center_y = LINES - 2;
 
-    mvprintw(my, mx, "Press any key to return...");
+    mvprintw(UI_Center_y, UI_Center_x, "Press any key to return...");
 
     refresh();
     getch();
