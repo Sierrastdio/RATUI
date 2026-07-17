@@ -56,7 +56,7 @@ make
 ```fish
 # If built with Makefile:
 ./make_rti
-
+```
 
 ### Clean Build Artifacts
 ```fish
@@ -177,6 +177,7 @@ make
 ```fish
 # Makefile 로 빌드 했다면:
 ./make_rti
+```
 
 ### 청소
 ```bash
