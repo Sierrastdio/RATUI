@@ -52,19 +52,11 @@ The project consists of several distinct modules:
 make
 ```
 
-### Build using Meson
-```fish
-meson compile -C bin && meson compile -C bin atp_msg
-```
-
 ### How to Run
 ```fish
 # If built with Makefile:
 ./make_rti
 
-# If built with Meson:
-./meson_rti
-```
 
 ### Clean Build Artifacts
 ```fish
@@ -77,7 +69,7 @@ make clean
 # Edit the config.rtuconf file to specify the storage paths for your archive.
 # Example:
 
-# config.rtuconf
+# config.ratui
 INGEST_PATH=/home/Sierrastdio/INS
 ROS_STORAGE=/home/Sierrastdio/ROS
 EDS_STORAGE=/home/Sierrastdio/EDS
@@ -181,19 +173,10 @@ Header files and libraries written in **all capital letters** contain **core fun
 make
 ```
 
-```fish
-# meson 으로 빌드
-meson compile -C bin && meson compile -C bin atp_msg
-```
-
 ### 실행 방법
 ```fish
 # Makefile 로 빌드 했다면:
 ./make_rti
-
-# meson 으로 빌드 했다면:
-./meson_rti
-```
 
 ### 청소
 ```bash
@@ -202,10 +185,10 @@ make clean
 
 ## 사용 방법
 ```txt
-#config.rtuconf 파일을 수정하여 아카이브로 쓸 저장장치의 경로를 작성하세요.
+#config.ratui 파일을 수정하여 아카이브로 쓸 저장장치의 경로를 작성하세요.
 #예):
 
-# config.rtuconf
+# config.ratui
 INGEST_PATH=/home/Sierrastdio/INS
 ROS_STORAGE=/home/Sierrastdio/ROS
 EDS_STORAGE=/home/Sierrastdio/EDS
