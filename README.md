@@ -85,6 +85,47 @@ BKS_STORAGE=/home/Sierrastdio/BKS
 TRS_STORAGE=/home/Sierrastdio/TRS
 ```
 
+## Library, Function Naming Conventions, and Interpretation Guide
+
+Header files and libraries written in **all capital letters** contain **core functionality** designed to be reused anywhere they are needed:
+
+- `SECTOR_MENU.h`: A reusable menu engine designed to ensure that each sector or its sub-items utilize the same menu interface.
+
+- `FILE_CHECK.h`: A library that executes file duplication checks. It utilizes a 3-step verification method: `1st: File size comparison -> 2nd: Front/Back 4KB data comparison -> 3rd: Full MD5/SHA hash contrast`. 
+  - The `FILE_EXISTENCE_CHECK` function verifies whether a file exists at the specified path. It returns 1 if it exists, and 0 if it does not. 
+  - The `FILE_SIZE_GET` function returns the size of the specified file in bytes. It returns -1 if it fails to retrieve the file information. 
+  - The `FILE_DUPLICATE_CHECK` function checks if two files are identical using the 3-step process (file size → front/back 4KB comparison → MD5 hash comparison). It returns 1 if they are identical, and 0 if they differ.
+
+- `FILE_SEARCH.h`: A library containing file search capabilities. 
+  - The `FILE_NAME_EXTENSION_SEARCH` function searches for files with a specific extension (.txt, .bak, .img, etc.) within a designated directory, saves them to a list, and returns the number of files found. 
+  - The `FILE_ALL_LIST_GET` function retrieves a list of all files and folders (excluding hidden files) within a designated directory, saves them to a list, and returns the total number of items.
+
+- `FILE_UTIL.h`: A file management library that provides file **copy** and **move** functionalities. 
+  - The `FILE_COPY` function copies the contents of the source (src) file to the destination (dest) file. It returns 1 upon a successful copy, and 0 upon failure. 
+  - The `FILE_MOVE` function moves the source file to the destination path. Internally, it copies the file first and then deletes the original source file. It returns 1 upon success, and 0 upon failure.
+
+- `PATH_CONFIG.h`: A configuration library that reads and manages the directory paths of major sectors from a configuration file (`config.ratui`). 
+  - The `LOAD_CONFIG()` function reads the configuration file (`config.rtuconf`) and stores the directory paths for each sector (INGEST(INS), ROS, EDS, BKS, TRS) into global variables. 
+  - The `ENSURE_DIRECTORIES()` function automatically creates the necessary directories (ROS, EDS, BKS, TRS) based on the paths read from the configuration file. 
+  - The `STRIP_NEWLINE` function removes trailing newline characters (\n, \r) from a string to ensure the configuration file is parsed correctly.
+
+
+### Modules Description
+
+- `<sector>func.h` & `<sector>func.c`: Libraries implemented to handle sector-specific functionalities. They reference the **libraries written in all capital letters** to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual **functions**.
+
+- **Important**: The functions within `<sector>func.c` are primarily written in lowercase, whereas the functions belonging to the `include` and `src` directories are entirely written in uppercase.
+**********************
+
+- `<sector>main.c`: Fits the content to be displayed on each sector screen according to the `SECTOR_MENU` format, and maps the **functions** defined in `<sector>func.c` to correspond with the **return values** of the `SECTOR_MENU` functions.
+
+
+### Functions Description
+
+- Functions like `SECTOR_MENU()` or `FILE_CHECK()` are defined within the libraries located in the `src/` directory.
+
+- Functions following the patterns of `ROSfunc_manage_storage()`, `ROSfunc_show_info()`, or `INSfunc_handle_file_add()` are defined within `<sector>func.c`.
+
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -173,3 +214,34 @@ TRS_STORAGE=/home/Sierrastdio/TRS
 ```
 
 
+## 라이브러리, 함수명 구분, 해석 방법.
+
+
+대문자로만 이루어진 헤더파일, 라이브러리는 필요한곳이라면 어디든 쓸 **핵심 기능**을 담고 있습니다 :
+
+- `SECTOR_MENU.h` : 각 섹터나 그 하위 항목에서 같은 메뉴 인터페이스를 사용하도록 만든 재사용 가능한 메뉴 엔진입니다. 
+
+- `FILE_CHECK.h` : 파일 중복 검사를 실행하는 라이브러리입니다. `1차: 파일 크기 비교  2차: 앞/뒤 4KB 데이터 비교  3차: 전체 MD5/SHA 해시 대조` 의 방식을 사용합니다. `FILE_EXISTENCE_CHECK` 함수를 통해 지정한 경로에 파일이 존재하는지 확인합니다. 존재하면 1, 존재하지 않으면 0을 반환합니다. `FILE_SIZE_GET` 함수르르 통해 지정한 파일의 크기(Byte)를 반환합니다. 파일 정보를 가져오지 못하면 -1을 반환합니다. `FILE_DUPLICATE_CHECK` 함수를 통해 두 파일이 동일한 파일인지 3단계(파일 크기 → 앞/뒤 4KB 비교 → MD5 해시 비교)로 검사하여, 동일하면 1, 다르면 0을 반환합니다.
+
+- `FILE_SEARCH.h` : 파일 검색 기능을 담고있는 라이브러리 입니다. `FILE_NAME_EXTENSION_SEARCH` 함수로 지정한 디렉토리에서 특정 확장자(.txt, .bak, .img 등)를 가진 파일만 검색하여 목록에 저장하고, 찾은 파일 개수를 반환합니다. `FILE_ALL_LIST_GET` 함수로 지정한 디렉토리의 모든 파일 및 폴더 목록(숨김 파일 제외)을 가져와 목록에 저장하고, 총 항목 개수를 반환합니다.
+
+- `FILE_UTIL.h` : 파일의 **복사** 및 **이동** 기능을 제공하는 파일 관리 라이브러리입니다. `FILE_COPY` 함수를 통해 원본(src) 파일의 내용을 대상(dest) 파일로 복사합니다. 복사에 성공하면 1, 실패하면 0을 반환합니다. `FILE_MOVE` 함수를 통해 원본 파일을 대상 경로로 이동합니다. 내부적으로 파일을 먼저 복사한 후 원본 파일을 삭제하며, 성공하면 1, 실패하면 0을 반환합니다.
+
+- `PATH_CONFIG.h` : 주요 섹터들의 디렉토리 경로를 설정파일(`config.ratui`)로부터 읽어오고 관리하는 환경설정 라이브러리 입니다. `LOAD_CONFIG()`함수를 통해 설정 파일(`config.rtuconf`)을 읽어 각 섹터(INGEST(INS), ROS, EDS, BKS, TRS)의 디렉토리 경로를 전역 변수에 저장합니다. `ENSURE_DIRECTORIES()`함수는 설정 파일에서 읽어온 경로를 기준으로 필요한 디렉토리(ROS, EDS, BKS, TRS)를 자동으로 생성합니다. `STRIP_NEWLINE` 함수는 문자열 끝에 포함된 개행 문자(\n, \r)를 제거하여 설정 파일을 올바르게 읽을 수 있도록 합니다.
+
+
+### modules 설명
+
+
+- `<sector>func.h`& `<sector>func.c`: 섹터 고유의 기능을 구현하기 위한 라이브러리 입니다. **대문자로만 이루어진 라이브러리**를 참조하여 이를 각 섹터에 맞게 적절히 사용. 배치하는 역할을 합니다. 따라서 각 섹터의 직접적 기능을 하나의 **함수**들로 구현합니다.  
+
+- **중요**: `<sector>func.c`의 함수들은 주로 소문자 형태이며 `include`폴더와 `src`폴더의 함수는 전부 대문자로 이루어진 형태입니다.
+**********************
+
+- `<sector>main.c` : `SECTOR_MENU` 양식에 맞춰서 각 섹터 화면에 표기할 내용이나, `<sector>func.c`에서 정의한, **함수** 들을 각 `SECTOR_MENU`의 함수의 **반환값**에 맞게 배치합니다.
+
+### 함수 설명
+
+- `SECTOR_MENU()` , 또는 `FILE_CHECK()` 과 같은 함수는 `src/` 의 라이브러리들에서 정의된 함수들입니다.
+
+- `ROSfunc_manage_storage()`, 또는 `ROSfunc_show_info()`, `INSfunc_handle_file_add()`과 **같은 형태** 함수는 `<sector>func.c`에서 정의된 함수입니다.
