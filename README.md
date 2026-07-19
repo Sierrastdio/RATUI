@@ -107,7 +107,6 @@ Header files and libraries written in **all capital letters** contain **core fun
 - `<sector>func.h` & `<sector>func.c`: Libraries implemented to handle sector-specific functionalities. They reference the **libraries written in all capital letters** to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual **functions**.
 
 - **Important**: The functions within `<sector>func.c` are primarily written in lowercase, whereas the functions belonging to the `include` and `src` directories are entirely written in uppercase.
-**********************
 
 - `<sector>main.c`: Fits the content to be displayed on each sector screen according to the `SECTOR_MENU` format, and maps the **functions** defined in `<sector>func.c` to correspond with the **return values** of the `SECTOR_MENU` functions.
 
@@ -220,7 +219,6 @@ TRS_STORAGE=/home/Sierrastdio/TRS
 - `<sector>func.h`& `<sector>func.c`: 섹터 고유의 기능을 구현하기 위한 라이브러리 입니다. **대문자로만 이루어진 라이브러리**를 참조하여 이를 각 섹터에 맞게 적절히 사용. 배치하는 역할을 합니다. 따라서 각 섹터의 직접적 기능을 하나의 **함수**들로 구현합니다.  
 
 - **중요**: `<sector>func.c`의 함수들은 주로 소문자 형태이며 `include`폴더와 `src`폴더의 함수는 전부 대문자로 이루어진 형태입니다.
-**********************
 
 - `<sector>main.c` : `SECTOR_MENU` 양식에 맞춰서 각 섹터 화면에 표기할 내용이나, `<sector>func.c`에서 정의한, **함수** 들을 각 `SECTOR_MENU`의 함수의 **반환값**에 맞게 배치합니다.
 
