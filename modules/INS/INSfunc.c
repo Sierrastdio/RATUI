@@ -8,6 +8,10 @@
 #include "FILE_UTIL.h"
 #include "PATH_CONFIG.h"
 #include "INSfunc.h"
+#include "UI_PRINT.h"
+
+// 리눅스 경로 최적화 버퍼 크기 정의
+#define PATH_BUFFER_MAX 512
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
  *  파일 목록을 해제하는 단일 함수. 모든 함수에서 반복되던 for루프를 대체.
@@ -20,11 +24,11 @@ static void free_list(char **list, int count) {
 }
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
- *  상태바(하단 2번째 줄)에 메시지를 출력하고 키 입력을 대기.
+ *  상태바(하단 2번째 줄)에 메시지를 출력하고 키 입력을 대기 (전역 변수 UI_Win_Height 활용).
  */
 static void status_msg(const char *msg) {
-    move(LINES - 2, 2); clrtoeol();
-    mvprintw(LINES - 2, 2, "%s", msg);
+    move(UI_Win_Height - 2, 2); clrtoeol();
+    mvprintw(UI_Win_Height - 2, 2, "%s", msg);
     refresh();
     getch();
 }
@@ -68,7 +72,7 @@ int INSfunc_handle_file_add() {
 
         if (choice == -3) {                         // [r] 새로고침
             free_list(file_list, file_count);
-            mvprintw(LINES - 1, 2, " >> List Updated. ");
+            mvprintw(UI_Win_Height - 1, 2, " >> List Updated. ");
             refresh(); napms(150);
             continue;
         }
@@ -78,22 +82,23 @@ int INSfunc_handle_file_add() {
             return 0;
         }
 
-        char src[1024], dest[1024];
+        // 과도하게 할당된 버퍼 크기를 512 바이트로 축소 최적화
+        char src[PATH_BUFFER_MAX], dest[PATH_BUFFER_MAX];
         snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, file_list[choice]);
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH,    file_list[choice]);
 
-        move(LINES - 2, 2); clrtoeol();
+        move(UI_Win_Height - 2, 2); clrtoeol();
 
         if (FILE_EXISTENCE_CHECK(dest)) {
             if (FILE_DUPLICATE_CHECK(src, dest)) {
-                mvprintw(LINES - 2, 2, "CRITICAL: Identical file already exists!");
+                mvprintw(UI_Win_Height - 2, 2, "CRITICAL: Identical file already exists!");
             } else {
-                mvprintw(LINES - 2, 2, FILE_COPY(src, dest)
+                mvprintw(UI_Win_Height - 2, 2, FILE_COPY(src, dest)
                     ? "SUCCESS: File Overwritten."
                     : "ERROR: Overwrite failed.");
             }
         } else {
-            mvprintw(LINES - 2, 2, FILE_COPY(src, dest)
+            mvprintw(UI_Win_Height - 2, 2, FILE_COPY(src, dest)
                 ? "SUCCESS: File copied to ROS."
                 : "ERROR: Copy failed.");
         }
@@ -123,7 +128,6 @@ int INSfunc_list() {
         free_list(temp_list, count);
 
         if (choice == -1) return 0;     // ESC
-        // -3(새로고침) 및 선택 시 루프 재진입 → 자동 갱신
     }
 }
 
@@ -156,7 +160,8 @@ int INS_copy_to_sector(const char *dest_path, const char *sector_name) {
             return 0;
         }
 
-        char src[1024], dest[1024];
+        // 버퍼 다이어트 완료
+        char src[PATH_BUFFER_MAX], dest[PATH_BUFFER_MAX];
         snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, temp_list[choice]);
         snprintf(dest, sizeof(dest), "%s%s", dest_path,   temp_list[choice]);
 
@@ -199,7 +204,8 @@ int INS_quick_duplicate_check() {
             return 0;
         }
 
-        char dest[1024];
+        // 버퍼 다이어트 완료
+        char dest[PATH_BUFFER_MAX];
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH, temp_list[choice]);
 
         status_msg(FILE_EXISTENCE_CHECK(dest)
