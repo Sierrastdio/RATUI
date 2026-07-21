@@ -11,7 +11,7 @@ int UI_Start_Y = 0;
 int UI_Left_X = 0;
 int UI_Right_X = 0;
 
-// 기존 안전 분기 로직을 완벽히 유지한 텍스트 중앙 X좌표 계산 함수 (int 반환)
+// 기존 전체 화면(COLS) 기준 텍스트 중앙 X좌표 계산 함수 (유지)
 int UI_GET_CENTER_X(int textlen)
 {
     if (textlen <= 0) {
@@ -25,6 +25,30 @@ int UI_GET_CENTER_X(int textlen)
     }
 
     UI_Center_x = (COLS - textlen) / 2;
+    return UI_Center_x;
+}
+
+// [추가] 왼쪽 윈도우 내부 출력용 중앙 X좌표 계산 함수
+int UI_GET_LEFT_WIN_CENTER_X(int textlen)
+{
+    if (textlen <= 0 || textlen >= UI_Win_Width) {
+        UI_Center_x = 1;
+        return 1;
+    }
+
+    UI_Center_x = (UI_Win_Width - textlen) / 2;
+    return UI_Center_x;
+}
+
+// [추가] 오른쪽 윈도우 내부 출력용 중앙 X좌표 계산 함수 (좌우 폭이 동일하므로 UI_Win_Width 재활용)
+int UI_GET_RIGHT_WIN_CENTER_X(int textlen)
+{
+    if (textlen <= 0 || textlen >= UI_Win_Width) {
+        UI_Center_x = 1;
+        return 1;
+    }
+
+    UI_Center_x = (UI_Win_Width - textlen) / 2;
     return UI_Center_x;
 }
 

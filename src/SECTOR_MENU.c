@@ -4,8 +4,9 @@
 #include "help_UI.h"
 #include "UI_PRINT.h"
 
-#define MAX_VISIBLE 15  /* 한번에 표시할 항목 개수 최대 15개   */
+#define MAX_VISIBLE 15  /* 한번에 표시할 항목 개수 최대 15개 */
 
+// 전체 화면(stdscr) 기반 중앙 정렬 메인 메뉴
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id) {
     int start_index = 0;
     int key;
@@ -28,6 +29,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
            temp_count /= 10;
         } while (temp_count > 0);
 
+        // 전체 화면(COLS) 기준 전역 X좌표 계산 함수 활용
         UI_GET_CENTER_X(title_len);
 
         attron(A_REVERSE);
@@ -104,6 +106,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     }
 }
 
+// 분할 윈도우 전용 서브 메뉴
 int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int count, int *cursor, int max_len) {
     int win_width = getmaxx(win);
     int win_height = getmaxy(win);
@@ -111,12 +114,12 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     int menu_start_x;
     int start_y;
 
-    // [레이아웃 연동 핵심] 좌측 정렬 규칙(SIGN_LEFT_ALIGN)일 때 좌표 초기화 설정
+    // [레이아웃 연동] 좌측 정렬 규칙(SIGN_LEFT_ALIGN)일 때 좌표 초기화 설정
     if (max_len == SIGN_LEFT_ALIGN) {
         menu_start_x = 4; // 좌측에서 4칸 띄우기
-        start_y = 3;      // 타이틀(1라인) 아래 여백을 두고 3라인부터 차례대로 출력
+        start_y = 3;      // 타이틀 아래 여백을 두고 3라인부터 차례대로 출력
     } else {
-        // 기존 중앙 정렬 레이아웃 방식 유지
+        // 기존 중앙 정렬 방식 유지
         menu_start_x = (win_width - max_len) / 2;
         if (menu_start_x < 1) menu_start_x = 1;
 
@@ -127,16 +130,18 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     werase(win);
     box(win, 0, 0);
 
-    // 상단 중앙 타이틀 출력
-    int title_x = (win_width - (int)strlen(title)) / 2;
+    // 상단 타이틀 정렬 (UI_PRINT 전역 헬퍼 기반 폭 계산)
+    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(title));
+    int title_x = UI_Center_x;
     if (title_x < 1) title_x = 1;
+
     wattron(win, A_REVERSE);
     mvwprintw(win, 1, title_x, "%s", title);
     wattroff(win, A_REVERSE);
 
-    // 목록 출력 루프 (start_y 기준으로 아래로 차례차례 정렬됨)
+    // 목록 출력 루프
     for (int i = 0; i < count; i++) {
-        // 데이터 창 높이를 넘어가지 않도록 안전 제어문 추가
+        // 데이터 창 높이를 넘어가지 않도록 안전 제어
         if (start_y + i >= win_height - 1) break;
 
         if (i == *cursor) {

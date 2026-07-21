@@ -49,7 +49,7 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             mvwprintw(data_win, UI_Win_Height - 1, 2, "Path: %s", current_view_path);
             wrefresh(data_win);
 
-            int ch = getch();
+            int ch = wgetch(data_win);
             if (ch == 27 || ch == 'q' || ch == 'Q') {
                 if (strcmp(current_view_path, ROS_PATH) == 0) break;
                 else {
@@ -113,7 +113,8 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             mvwprintw(data_win, UI_Win_Height - 2, 2, ">> DELETE %s? (y/n)", raw_list[cursor]);
             wrefresh(data_win);
 
-            if (getch() == 'y') {
+            int confirm_ch = wgetch(data_win);
+            if (confirm_ch == 'y' || confirm_ch == 'Y') {
                 if (is_directory(target)) {
                     char cmd[1100];
                     sprintf(cmd, "rm -rf \"%s\"", target);
@@ -138,14 +139,14 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
     }
 }
 
-// 우측 윈도우 영역 안에서 동작하는 정보 디스플레이 (정렬 픽스 완료)
+// 우측 윈도우 영역 안에서 동작하는 정보 디스플레이 (UI_GET_RIGHT_WIN_CENTER_X 적용)
 void ROSfunc_show_info(WINDOW *data_win) {
     werase(data_win);
     box(data_win, 0, 0);
 
-    // 1. 헤더 (우측 분할 윈도우 가로폭 UI_Win_Width 기준 로컬 정렬 계산)
+    // 1. 헤더 (우측 분할 윈도우 전용 중앙 계산 함수 적용)
     char header_str[] = " === ROS STORAGE STATUS === ";
-    UI_Center_x = (UI_Win_Width - (int)strlen(header_str)) / 2;
+    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(header_str));
     UI_Center_y = (UI_Win_Height / 2) - 3;
 
     wattron(data_win, A_REVERSE);
@@ -153,23 +154,23 @@ void ROSfunc_show_info(WINDOW *data_win) {
     wattroff(data_win, A_REVERSE);
 
     // 2. 루트 경로 표시
-    char path_str[1024];
+    char path_str[256];
     sprintf(path_str, "Current Root: %s", ROS_PATH);
-    UI_Center_x = (UI_Win_Width - (int)strlen(path_str)) / 2;
+    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(path_str));
     UI_Center_y = (UI_Win_Height / 2) - 1;
 
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", path_str);
 
     // 3. 컨트롤 설명 표시
     char desc_str[] = "Control: [ENTER] to Enter DIR, [d] to Delete Any";
-    UI_Center_x = (UI_Win_Width - (int)strlen(desc_str)) / 2;
+    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(desc_str));
     UI_Center_y = (UI_Win_Height / 2) + 1;
 
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", desc_str);
 
     // 4. 하단 안내문 (종료 가이드 매핑)
     char footer_str[] = "Press [ESC] or [Q] to return...";
-    UI_Center_x = (UI_Win_Width - (int)strlen(footer_str)) / 2;
+    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(footer_str));
     UI_Center_y = UI_Win_Height - 2;
 
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", footer_str);
