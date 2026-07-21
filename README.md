@@ -4,69 +4,58 @@
 
 ---
 
-# Raspberry Archive Interface (RATUI)
+
+# Raspberry Archive Interface (Raspberrypi Archive Terminal_UI_Interface RATUI)
 
 ## Introduction
 
-The Raspberry Pi Archive Interface (RATUI) is a lightweight, Text-based User Interface (TUI) application designed for Raspberry Pi. It provides functional assistance when utilizing a Raspberry Pi as a personal archive or private server.
+The Raspberry Pi Archive Interface (RATUI) is a lightweight, Text-based User Interface (TUI) application designed to run on the Raspberry Pi. When using a Raspberry Pi as a personal archive, it aims to provide functional assistance tailored for archive management, in addition to basic file explorer capabilities.
 
-The project is written in C and implements a terminal-based interface using the `ncurses` library.
+This project is written in C and implements a terminal-based interface using the ncurses library.
 
 ## Key Features
 
 ### 0. Module Features
 The project consists of several distinct modules:
-- `HOMEmain`: Main home interface
-- `ROS (ReadOnly)`: Resource management
-- `INS (Insert)`: File insertion and addition functions
-- `EDS (Edit)`: File editing functions
-- `BKS (Backup)`: Backup-related functions
-- `TRS (Trash)`: File transfer functions
+- HOMEmain: Main home interface
+- ROS (ReadOnly): Main storage repository
+- INS (Insert): Temporary staging area before moving files to main storage
+- EDS (Edit): File editing functionality
+- BKS (Backup): Backup-related functions
+- TRS (Trash): Files scheduled for deletion or disposal
 
 ### 1. File Explorer System
 - Compact and intuitive file browsing capabilities
 - Efficient file system management
 
 ### 2. File Management System
-- **Git Integration**: Execute Git commands and monitor status directly via the TUI (Under development)
-- **Custom Convenience Features**: Basic operations such as copying, moving, and deleting files
+- Custom Convenience Features: Basic operations such as copying, moving, and deleting files
 
 ### 3. Duplicate File Management
-- **Phase 1 Filter (File Size)**: Immediately excludes files with different sizes to minimize CPU overhead.
-- **Phase 2 Filter (Partial Bit Comparison)**: Compares the first and last 4KB of files to filter duplicate candidates.
-- **Phase 3 Confirmation (Hash Comparison)**: Full file hash comparison to ensure 100% match accuracy.
-
-### 4. Automatic Archive Compliance Rules
-- Applies automated protocols for compliant file archiving.
+- Phase 1 Filter (File Size): Immediately excludes files with different sizes
+- Phase 2 Filter (Partial Bit Comparison): Compares the first and last 4KB of files to filter duplicate candidates
+- Phase 3 Confirmation (Hash Comparison): Full file hash comparison to ensure 100% match accuracy
 
 ## Installation & Build
 
 ### Requirements
-- Makefile / Meson
+- Makefile
 - GCC Compiler
 - ncurses library
 
 ### How to Build
-```fish
 # Build using Makefile
 make
-```
 
 ### How to Run
-```fish
 # If built with Makefile:
 ./make_rti
-```
 
 ### Clean Build Artifacts
-```fish
 make clean
-```
 
-### Usage
-
-```txt
-# Edit the config.rtuconf file to specify the storage paths for your archive.
+## Usage
+# Edit the config.ratui file to specify the storage paths for your archive.
 # Example:
 
 # config.ratui
@@ -75,47 +64,46 @@ ROS_STORAGE=/home/Sierrastdio/ROS
 EDS_STORAGE=/home/Sierrastdio/EDS
 BKS_STORAGE=/home/Sierrastdio/BKS
 TRS_STORAGE=/home/Sierrastdio/TRS
-```
 
 ## Library, Function Naming Conventions, and Interpretation Guide
 
-Header files and libraries written in **all capital letters** contain **core functionality** designed to be reused anywhere they are needed:
+Header files and libraries written in all capital letters contain core functionality designed to be reused anywhere they are needed:
 
-- `SECTOR_MENU.h`: A reusable menu engine designed to ensure that each sector or its sub-items utilize the same menu interface.
+- SECTOR_MENU.h: A reusable menu engine designed to ensure that each sector or its sub-items utilize the same menu interface.
 
-- `FILE_CHECK.h`: A library that executes file duplication checks. It utilizes a 3-step verification method: `1st: File size comparison -> 2nd: Front/Back 4KB data comparison -> 3rd: Full MD5/SHA hash contrast`. 
-  - The `FILE_EXISTENCE_CHECK` function verifies whether a file exists at the specified path. It returns 1 if it exists, and 0 if it does not. 
-  - The `FILE_SIZE_GET` function returns the size of the specified file in bytes. It returns -1 if it fails to retrieve the file information. 
-  - The `FILE_DUPLICATE_CHECK` function checks if two files are identical using the 3-step process (file size → front/back 4KB comparison → MD5 hash comparison). It returns 1 if they are identical, and 0 if they differ.
+- FILE_CHECK.h: A library that executes file duplication checks. It utilizes a 3-step verification method: 1st: File size comparison -> 2nd: Front/Back 4KB data comparison -> 3rd: Full MD5/SHA hash comparison.
+  - The FILE_EXISTENCE_CHECK function verifies whether a file exists at the specified path. It returns 1 if it exists, and 0 if it does not.
+  - The FILE_SIZE_GET function returns the size of the specified file in bytes. It returns -1 if it fails to retrieve the file information.
+  - The FILE_DUPLICATE_CHECK function checks if two files are identical using the 3-step process (file size -> front/back 4KB comparison -> MD5 hash comparison). It returns 1 if they are identical, and 0 if they differ.
 
-- `FILE_SEARCH.h`: A library containing file search capabilities. 
-  - The `FILE_NAME_EXTENSION_SEARCH` function searches for files with a specific extension (.txt, .bak, .img, etc.) within a designated directory, saves them to a list, and returns the number of files found. 
-  - The `FILE_ALL_LIST_GET` function retrieves a list of all files and folders (excluding hidden files) within a designated directory, saves them to a list, and returns the total number of items.
+- FILE_SEARCH.h: A library containing file search capabilities.
+  - The FILE_NAME_EXTENSION_SEARCH function searches for files with a specific extension (.txt, .bak, .img, etc.) within a designated directory, saves them to a list, and returns the number of files found.
+  - The FILE_ALL_LIST_GET function retrieves a list of all files and folders (excluding hidden files) within a designated directory, saves them to a list, and returns the total number of items.
 
-- `FILE_UTIL.h`: A file management library that provides file **copy** and **move** functionalities. 
-  - The `FILE_COPY` function copies the contents of the source (src) file to the destination (dest) file. It returns 1 upon a successful copy, and 0 upon failure. 
-  - The `FILE_MOVE` function moves the source file to the destination path. Internally, it copies the file first and then deletes the original source file. It returns 1 upon success, and 0 upon failure.
+- FILE_UTIL.h: A file management library that provides file copy and move functionalities.
+  - The FILE_COPY function copies the contents of the source (src) file to the destination (dest) file. It returns 1 upon a successful copy, and 0 upon failure.
+  - The FILE_MOVE function moves the source file to the destination path. Internally, it copies the file first and then deletes the original source file. It returns 1 upon success, and 0 upon failure.
 
-- `PATH_CONFIG.h`: A configuration library that reads and manages the directory paths of major sectors from a configuration file (`config.ratui`). 
-  - The `LOAD_CONFIG()` function reads the configuration file (`config.rtuconf`) and stores the directory paths for each sector (INGEST(INS), ROS, EDS, BKS, TRS) into global variables. 
-  - The `ENSURE_DIRECTORIES()` function automatically creates the necessary directories (ROS, EDS, BKS, TRS) based on the paths read from the configuration file. 
-  - The `STRIP_NEWLINE` function removes trailing newline characters (\n, \r) from a string to ensure the configuration file is parsed correctly.
-
+- PATH_CONFIG.h: A configuration library that reads and manages directory paths of major sectors from the configuration file (config.ratui).
+  - The LOAD_CONFIG() function reads the configuration file (config.rtuconf) and stores the directory paths for each sector (INGEST(INS), ROS, EDS, BKS, TRS) into global variables.
+  - The ENSURE_DIRECTORIES() function automatically creates the necessary directories (ROS, EDS, BKS, TRS) based on the paths read from the configuration file.
+  - The STRIP_NEWLINE function removes trailing newline characters (\n, \r) from a string to ensure the configuration file is parsed correctly.
 
 ### Modules Description
 
-- `<sector>func.h` & `<sector>func.c`: Libraries implemented to handle sector-specific functionalities. They reference the **libraries written in all capital letters** to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual **functions**.
+- <sector>func.h & <sector>func.c: Libraries implemented to handle sector-specific functionalities. They reference the libraries written in all capital letters to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual functions.
 
-- **Important**: The functions within `<sector>func.c` are primarily written in lowercase, whereas the functions belonging to the `include` and `src` directories are entirely written in uppercase.
+- Important: The functions within <sector>func.c are primarily written in lowercase, whereas the functions belonging to the include and src directories are entirely written in uppercase.
 
-- `<sector>main.c`: Fits the content to be displayed on each sector screen according to the `SECTOR_MENU` format, and maps the **functions** defined in `<sector>func.c` to correspond with the **return values** of the `SECTOR_MENU` functions.
-
+- <sector>main.c: Fits the content to be displayed on each sector screen according to the SECTOR_MENU format, and maps the functions defined in <sector>func.c to correspond with the return values of the SECTOR_MENU functions.
 
 ### Functions Description
 
-- Functions like `SECTOR_MENU()` or `FILE_CHECK()` are defined within the libraries located in the `src/` directory.
+- Functions like SECTOR_MENU() or FILE_CHECK() are defined within the libraries located in the src/ directory.
 
-- Functions following the patterns of `ROSfunc_manage_storage()`, `ROSfunc_show_info()`, or `INSfunc_handle_file_add()` are defined within `<sector>func.c`.
+- Functions following the patterns of ROSfunc_manage_storage(), ROSfunc_show_info(), or INSfunc_handle_file_add() are defined within <sector>func.c.
+
+
 
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
@@ -126,7 +114,7 @@ Header files and libraries written in **all capital letters** contain **core fun
 
 ## 소개
 
-라즈베리파이  아카이브 인터페이스 (RATUI)는 라즈베리파이에서 동작하는 가벼운 텍스트 기반 사용자 인터페이스(TUI) 애플리케이션입니다. 개인 아카이브(개인 서버)로 라즈베리파이를 사용할 때 기능적인 도움을 제공합니다.
+라즈베리파이  아카이브 인터페이스 (RATUI)는 라즈베리파이에서 동작하는 가벼운 텍스트 기반 사용자 인터페이스(TUI) 애플리케이션입니다. 개인 아카이브로서 라즈베리파이를 사용할 때 기본적인 파일 탐색기의 기능에 더해 아카이브 관리에 맞는 기능적인 도움을 제공하는것을 목표로 합니다.
 
 이 프로젝트는 C 언어로 작성되었으며, ncurses 라이브러리를 사용하여 터미널 기반 인터페이스를 구현합니다.
 
@@ -135,28 +123,23 @@ Header files and libraries written in **all capital letters** contain **core fun
 ### 0. 모듈별 기능
 프로젝트는 여러 모듈로 구성되어 있습니다:
 - ``HOMEmain``: 메인 홈 인터페이스
-- ``ROS (ReadOnly)``: 리소스 관리
-- ``INS (Insert)``: 파일 삽입 및 추가 기능
+- ``ROS (ReadOnly)``: 메인 저장소
+- ``INS (Insert)``: 파일들을 메인 저장소에 옮기기전 임시 공간
 - ``EDS (Edit)``: 파일 편집 기능
 - ``BKS (Backup)``: 백업 관련 기능
-- ``TRS (Trash)``: 파일 전송 기능
+- ``TRS (Trash)``: 삭제, 폐기 예정인 파일들
 
 ### 1. 파일 탐색기 시스템
 - 컴팩트하고 직관적인 파일 탐색 기능
 - 효율적인 파일 시스템 관리
 
 ### 2. 파일 관리 시스템
-- Git 통합: TUI를 통해 Git 명령어 실행 및 상태 모니터링(아직 안만듦)
 - 자체 제작 편의 기능: 파일 복사, 이동, 삭제 등의 기본 작업
 
 ### 3. 중복 파일 관리
-- **1차 필터 (파일 크기)**: 크기가 다른 파일은 즉시 제외 (CPU 연산 최소화)
+- **1차 필터 (파일 크기)**: 크기가 다른 파일은 즉시 제외
 - **2차 필터 (부분 비트 비교)**: 파일의 앞부분과 뒷부분 4KB를 비교하여 중복 후보 필터링
 - **3차 확정 (해시 비교)**: 전체 파일 해시 비교로 100% 일치 확인
-
-### 4. 아카이브 보관 규칙 자동 준수
-- 파일 보관을 위한 자동화된 프로토콜 적용
-
 
 
 ## 설치 및 빌드
