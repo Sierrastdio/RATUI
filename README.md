@@ -69,33 +69,33 @@ TRS_STORAGE=/home/Sierrastdio/TRS
 
 Header files and libraries written in all capital letters contain core functionality designed to be reused anywhere they are needed:
 
-- SECTOR_MENU.h: A reusable menu engine designed to ensure that each sector or its sub-items utilize the same menu interface.
+- `SECTOR_MENU.h`: A reusable menu engine designed to ensure that each sector or its sub-items utilize the same menu interface.
 
-- FILE_CHECK.h: A library that executes file duplication checks. It utilizes a 3-step verification method: 1st: File size comparison -> 2nd: Front/Back 4KB data comparison -> 3rd: Full MD5/SHA hash comparison.
+- `FILE_CHECK.h`: A library that executes file duplication checks. It utilizes a 3-step verification method: 1st: File size comparison -> 2nd: Front/Back 4KB data comparison -> 3rd: Full MD5/SHA hash comparison.
   - The FILE_EXISTENCE_CHECK function verifies whether a file exists at the specified path. It returns 1 if it exists, and 0 if it does not.
   - The FILE_SIZE_GET function returns the size of the specified file in bytes. It returns -1 if it fails to retrieve the file information.
   - The FILE_DUPLICATE_CHECK function checks if two files are identical using the 3-step process (file size -> front/back 4KB comparison -> MD5 hash comparison). It returns 1 if they are identical, and 0 if they differ.
 
-- FILE_SEARCH.h: A library containing file search capabilities.
+- `FILE_SEARCH.h`: A library containing file search capabilities.
   - The FILE_NAME_EXTENSION_SEARCH function searches for files with a specific extension (.txt, .bak, .img, etc.) within a designated directory, saves them to a list, and returns the number of files found.
   - The FILE_ALL_LIST_GET function retrieves a list of all files and folders (excluding hidden files) within a designated directory, saves them to a list, and returns the total number of items.
 
-- FILE_UTIL.h: A file management library that provides file copy and move functionalities.
-  - The FILE_COPY function copies the contents of the source (src) file to the destination (dest) file. It returns 1 upon a successful copy, and 0 upon failure.
+- `FILE_UTIL.h`: A file management library that provides file copy and move functionalities.
+  - The FILE_COPY function copies the contents of the source file to the destination file. It returns 1 upon a successful copy, and 0 upon failure.
   - The FILE_MOVE function moves the source file to the destination path. Internally, it copies the file first and then deletes the original source file. It returns 1 upon success, and 0 upon failure.
 
-- PATH_CONFIG.h: A configuration library that reads and manages directory paths of major sectors from the configuration file (config.ratui).
+- `PATH_CONFIG.h`: A configuration library that reads and manages directory paths of major sectors from the configuration file (config.ratui).
   - The LOAD_CONFIG() function reads the configuration file (config.rtuconf) and stores the directory paths for each sector (INGEST(INS), ROS, EDS, BKS, TRS) into global variables.
   - The ENSURE_DIRECTORIES() function automatically creates the necessary directories (ROS, EDS, BKS, TRS) based on the paths read from the configuration file.
   - The STRIP_NEWLINE function removes trailing newline characters (\n, \r) from a string to ensure the configuration file is parsed correctly.
 
 ### Modules Description
 
-- <sector>func.h & <sector>func.c: Libraries implemented to handle sector-specific functionalities. They reference the libraries written in all capital letters to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual functions.
+- `<sector>func.h & <sector>func.c`: Libraries implemented to handle sector-specific functionalities. They reference the libraries written in all capital letters to appropriately utilize and deploy them for each specific sector. Consequently, the direct functionalities of each sector are implemented as a set of individual functions.
 
-- Important: The functions within <sector>func.c are primarily written in lowercase, whereas the functions belonging to the include and src directories are entirely written in uppercase.
+- Important: The functions within `<sector>func.c` are primarily written in lowercase, whereas the functions belonging to the include and src directories are entirely written in uppercase.
 
-- <sector>main.c: Fits the content to be displayed on each sector screen according to the SECTOR_MENU format, and maps the functions defined in <sector>func.c to correspond with the return values of the SECTOR_MENU functions.
+- `<sector>main.c`: Fits the content to be displayed on each sector screen according to the SECTOR_MENU format, and maps the functions defined in <sector>func.c to correspond with the return values of the SECTOR_MENU functions.
 
 ### Functions Description
 
