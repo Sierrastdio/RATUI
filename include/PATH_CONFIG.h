@@ -3,11 +3,12 @@
 
 #define Config_FileName "config.ratui"
 
-extern char INGEST_PATH[512];
-extern char ROS_PATH[512];
-extern char EDS_PATH[512];
-extern char BKS_PATH[512];
-extern char TRS_PATH[512];
+// 전역 경로 포인터 선언 (char[512] 배열 -> const char * 포인터 변경)
+extern const char *INGEST_PATH;
+extern const char *ROS_PATH;
+extern const char *EDS_PATH;
+extern const char *BKS_PATH;
+extern const char *TRS_PATH;
 
 void LOAD_CONFIG();
 void ENSURE_DIRECTORIES();

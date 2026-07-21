@@ -5,51 +5,82 @@
 
 #define Config_ext ".ratui"
 
-// 1. 전역 변수 정의
-char INGEST_PATH[512] = "";
-char ROS_PATH[512] = "";
-char EDS_PATH[512] = "";
-char BKS_PATH[512] = "";
-char TRS_PATH[512] = "";
+// 1. 전역 포인터 변수 초기화 (기초값 NULL)
+const char *INGEST_PATH = NULL;
+const char *ROS_PATH    = NULL;
+const char *EDS_PATH    = NULL;
+const char *BKS_PATH    = NULL;
+const char *TRS_PATH    = NULL;
 
-// 개행 문자 제거 함수
+// 개행 및 공백/인용구 제거 함수
 void STRIP_NEWLINE(char *str) {
-    size_t len = strlen (str);
-    while(len > 0 && (str[len -1 ] == '\n' || str[len-1] == '\r')) {
-        str[len-1] = '\0';
-        len --;
+    size_t len = strlen(str);
+    while (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r' || str[len - 1] == ' ' || str[len - 1] == '"')) {
+        str[len - 1] = '\0';
+        len--;
     }
 }
 
-
+// 안전한 포인터 할당 헬퍼 함수 (기존 메모리 해제 후 할당)
+static void SET_PATH_VAL(const char **target, const char *val) {
+    if (*target) {
+        free((void *)*target);
+    }
+    // 좌측 따옴표 나 공백 스킵
+    while (*val == ' ' || *val == '"') {
+        val++;
+    }
+    *target = strdup(val);
+}
 
 // 2. 설정 파일 읽기
-void LOAD_CONFIG() {
+void LOAD_CONFIG(void) {
     FILE *fp = fopen(Config_FileName, "r");
     if (!fp) {
         printf("Error: Could not open %s\n", Config_FileName);
-        exit(1); // 설정 파일이 없으면 진행하는 것이 위험하므로 강제 종료 추천
+        exit(1);
     }
 
-    char line[1024];
+    char line[256];
     while (fgets(line, sizeof(line), fp)) {
-        STRIP_NEWLINE(line); // 미리 줄바꿈 문자를 제거함
+        STRIP_NEWLINE(line);
 
+        // 주석 및 빈 줄 스킵
         if (line[0] == '#' || line[0] == '\0') continue;
 
-        if (strncmp(line, "INGEST_PATH=", 12) == 0) strcpy(INGEST_PATH, line + 12);
-        else if (strncmp(line, "ROS_STORAGE=", 12) == 0) strcpy(ROS_PATH, line + 12);
-        else if (strncmp(line, "EDS_STORAGE=", 12) == 0) strcpy(EDS_PATH, line + 12);
-        else if (strncmp(line, "BKS_STORAGE=", 12) == 0) strcpy(BKS_PATH, line + 12);
-        else if (strncmp(line, "TRS_STORAGE=", 12) == 0) strcpy(TRS_PATH, line + 12);
+        if (strncmp(line, "INGEST_PATH=", 12) == 0) {
+            SET_PATH_VAL(&INGEST_PATH, line + 12);
+        } else if (strncmp(line, "ROS_STORAGE=", 12) == 0) {
+            SET_PATH_VAL(&ROS_PATH, line + 12);
+        } else if (strncmp(line, "EDS_STORAGE=", 12) == 0) {
+            SET_PATH_VAL(&EDS_PATH, line + 12);
+        } else if (strncmp(line, "BKS_STORAGE=", 12) == 0) {
+            SET_PATH_VAL(&BKS_PATH, line + 12);
+        } else if (strncmp(line, "TRS_STORAGE=", 12) == 0) {
+            SET_PATH_VAL(&TRS_PATH, line + 12);
+        }
     }
     fclose(fp);
+
+    // 경로 파싱 결과 검증 디버그 출력
+    printf("[CONFIG LOADED]\n");
+    printf(" INGEST: %s\n", INGEST_PATH ? INGEST_PATH : "(null)");
+    printf(" ROS:    %s\n", ROS_PATH    ? ROS_PATH    : "(null)");
+    printf(" EDS:    %s\n", EDS_PATH    ? EDS_PATH    : "(null)");
+    printf(" BKS:    %s\n", BKS_PATH    ? BKS_PATH    : "(null)");
+    printf(" TRS:    %s\n", TRS_PATH    ? TRS_PATH    : "(null)");
 }
 
 // 3. 폴더 자동 생성
-void ENSURE_DIRECTORIES() {
-    char cmd[4096];
-    // snprintf를 사용하면 버퍼 크기(sizeof(cmd))를 넘어서지 않도록 보장합니다.
-    snprintf(cmd, sizeof(cmd), "mkdir -p \"%s\" \"%s\" \"%s\" \"%s\"", ROS_PATH, EDS_PATH, BKS_PATH, TRS_PATH);
-    system(cmd); // 컴파일러 경고
+void ENSURE_DIRECTORIES(void) {
+    // 포인터가 NULL이거나 비어있을 경우 안전 처리
+    const char *ros = (ROS_PATH && *ROS_PATH) ? ROS_PATH : ".";
+    const char *eds = (EDS_PATH && *EDS_PATH) ? EDS_PATH : ".";
+    const char *bks = (BKS_PATH && *BKS_PATH) ? BKS_PATH : ".";
+    const char *trs = (TRS_PATH && *TRS_PATH) ? TRS_PATH : ".";
+
+    char cmd[2048];
+    snprintf(cmd, sizeof(cmd), "mkdir -p \"%s\" \"%s\" \"%s\" \"%s\"", ros, eds, bks, trs);
+    int ret = system(cmd);
+    (void)ret;
 }

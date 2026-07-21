@@ -2,7 +2,8 @@
 # 컴파일러 및 옵션 설정
 # ==========================================
 CC      := gcc
-CFLAGS  := -Wall -Wextra -Os -ffunction-sections -fdata-sections -Wno-unused-result -Iinclude
+# -I. 및 -Imodules 옵션을 추가하여 프로젝트 루트 및 modules 하위 경로 참조 허용
+CFLAGS  := -Wall -Wextra -Os -ffunction-sections -fdata-sections -Wno-unused-result -Iinclude -I. -Imodules
 LDFLAGS := -Wl,--gc-sections -Wl,--as-needed
 LIBS    := -lncurses
 
@@ -31,7 +32,6 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LIBS) $(LDFLAGS) -s
 
 # 2. 로깅 및 디버깅용 빌드 (심볼 유지)
-# 기존에 있던 '-s' 옵션을 제거하여 디버깅 데이터가 온전히 남도록 수정했습니다.
 log: clean
 	@if [ -f $(TARGET) ]; then cp $(TARGET) $(TARGET).bak; fi
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LIBS) $(LDFLAGS)
