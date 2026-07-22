@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdio.h>
 #include <string.h>
 #include "SECTOR_MENU.h"
 #include "help_UI.h"
@@ -6,7 +7,9 @@
 
 #define MAX_VISIBLE 15  /* 한번에 표시할 항목 개수 최대 15개 */
 
-// 전체 화면(stdscr) 기반 중앙 정렬 메인 메뉴
+/*===========================================================================
+ * SECTOR_MENU — 전체 화면(stdscr) 기반 중앙 정렬 메인 메뉴
+ *==========================================================================*/
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id) {
     int start_index = 0;
     int key;
@@ -22,14 +25,9 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     while (1) {
         clear();
 
-        int title_len = (sizeof(" ===  (Total: ) === ") - 1) + (int)strlen(title);
-        int temp_count = count;
-        do {
-           title_len++;
-           temp_count /= 10;
-        } while (temp_count > 0);
+        // snprintf를 사용해 불필요한 do-while 나눗셈 루프 없이 타이틀 정렬 길이 계산
+        int title_len = snprintf(NULL, 0, " === %s (Total: %d) === ", title, count);
 
-        // 전체 화면(COLS) 기준 전역 X좌표 계산 함수 활용
         UI_GET_CENTER_X(title_len);
 
         attron(A_REVERSE);
@@ -106,20 +104,29 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     }
 }
 
-// 윈도우(WINDOW*) 전용 서브 메뉴
+/*===========================================================================
+ * SECTOR_MENU_WIN — 윈도우(WINDOW*) 전용 서브 메뉴
+ *==========================================================================*/
 int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int count, int *cursor, int max_len) {
     int win_width = getmaxx(win);
     int win_height = getmaxy(win);
 
     int menu_start_x;
     int start_y;
+    int max_draw_count = win_height - 5; // 박스 경계선 및 타이틀/안내선 출력 공간 제외
 
-    // [레이아웃 연동] 좌측 정렬 규칙(SIGN_LEFT_ALIGN)일 때 좌표 초기화 설정
+    if (max_draw_count < 1) max_draw_count = 1;
+
+    // 스크롤 시작 위치 인덱스 계산
+    int start_index = 0;
+    if (*cursor >= max_draw_count) {
+        start_index = *cursor - (max_draw_count - 1);
+    }
+
     if (max_len == SIGN_LEFT_ALIGN) {
-        menu_start_x = 4; // 좌측에서 4칸 띄우기
-        start_y = 3;      // 타이틀 아래 여백을 두고 3라인부터 차례대로 출력
+        menu_start_x = 4;
+        start_y = 3;
     } else {
-        // 기존 중앙 정렬 방식 유지
         menu_start_x = (win_width - max_len) / 2;
         if (menu_start_x < 1) menu_start_x = 1;
 
@@ -130,7 +137,6 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     werase(win);
     box(win, 0, 0);
 
-    // 전달받은 윈도우의 실제 가로폭(win_width)을 기준으로 타이틀 중앙 좌표 계산
     int title_x = (win_width - (int)strlen(title)) / 2;
     if (title_x < 1) title_x = 1;
 
@@ -138,17 +144,19 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     mvwprintw(win, 1, title_x, "%s", title);
     wattroff(win, A_REVERSE);
 
-    // 목록 출력 루프
-    for (int i = 0; i < count; i++) {
-        // 데이터 창 높이를 넘어가지 않도록 안전 제어
-        if (start_y + i >= win_height - 1) break;
+    // 안전 스크롤 루프 출력
+    for (int i = 0; i < max_draw_count && (start_index + i) < count; i++) {
+        int idx = start_index + i;
+        int print_y = start_y + i;
 
-        if (i == *cursor) {
+        if (print_y >= win_height - 1) break;
+
+        if (idx == *cursor) {
             wattron(win, A_REVERSE);
-            mvwprintw(win, start_y + i, menu_start_x, "%s", items[i]);
+            mvwprintw(win, print_y, menu_start_x, "%s", items[idx]);
             wattroff(win, A_REVERSE);
         } else {
-            mvwprintw(win, start_y + i, menu_start_x, "%s", items[i]);
+            mvwprintw(win, print_y, menu_start_x, "%s", items[idx]);
         }
     }
 
@@ -177,15 +185,13 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
             else *cursor = 0;
             return SIGN_KEY_CHANGED;
 
-        // [추가] PgUp(페이지 업) 키입력 복구
         case KEY_PPAGE:
-            *cursor -= MAX_VISIBLE;
+            *cursor -= max_draw_count;
             if (*cursor < 0) *cursor = 0;
             return SIGN_KEY_CHANGED;
 
-        // [추가] PgDn(페이지 다운) 키입력 복구
         case KEY_NPAGE:
-            *cursor += MAX_VISIBLE;
+            *cursor += max_draw_count;
             if (*cursor >= count) *cursor = count - 1;
             return SIGN_KEY_CHANGED;
 

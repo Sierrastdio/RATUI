@@ -48,7 +48,7 @@ int main() {
                         case 4: TRS_MAIN_LOOP(); break;
                         case 5: endwin(); return 0;
                     }
-                    cursor = 0;
+                    /* [수정] cursor = 0; 제거 -> 선택했던 커서 위치 유지 */
                 }
                 continue;
             }
@@ -79,7 +79,7 @@ int main() {
                         case 4: TRS_MAIN_LOOP(); break;
                         case 5: endwin(); return 0;
                     }
-                    cursor = 0;
+                    /* [수정] cursor = 0; 제거 -> 복귀 시 이전 커서 위치가 상위 변수에 보존됨 */
                     break; // 섹터에서 복귀 시 대시보드 창을 새로 구성하기 위해 탈출
                 }
             }
