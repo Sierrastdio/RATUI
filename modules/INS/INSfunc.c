@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "SECTOR_MENU.h"
 #include "FILE_CHECK.h"
 #include "FILE_SEARCH.h"
@@ -10,21 +11,23 @@
 #include "INSfunc.h"
 #include "UI_PRINT.h"
 
-// 리눅스 경로 최적화 버퍼 크기 정의
 #define PATH_BUFFER_MAX 512
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
- *  파일 목록을 해제하는 단일 함수. 모든 함수에서 반복되던 for루프를 대체.
+ *  통짜 메모리 블록 단 1회 해제 구조.
+ *  list[0]이 전체 동적 버퍼의 시작점(Header) 역할을 하므로 list[0]만 free한다.
  */
 static void free_list(char **list, int count) {
-    for (int i = 0; i < count; i++) {
-        free(list[i]);
-        list[i] = NULL;         // dangling pointer 방지
+    if (list && count > 0 && list[0]) {
+        free(list[0]);
+        for (int i = 0; i < count; i++) {
+            list[i] = NULL;
+        }
     }
 }
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
- *  상태바(하단 2번째 줄)에 메시지를 출력하고 키 입력을 대기 (전역 변수 UI_Win_Height 활용).
+ *  상태바 메시지 출력 후 키 대기
  */
 static void status_msg(WINDOW *win, const char *msg) {
     if (win == NULL) return;
@@ -35,14 +38,16 @@ static void status_msg(WINDOW *win, const char *msg) {
 }
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
- *  INGEST_PATH 파일 목록 스캔 + 빈 목록 처리를 한 곳에서 담당.
- *  반환값: 스캔된 파일 수 (0이면 메시지 출력 후 0 반환)
+ *  지정한 경로(src_path)를 스캔하여 파일 목록 반환
  */
-static int scan_ingest(WINDOW *win, char **list, int max) {
-    int count = FILE_ALL_LIST_GET(INGEST_PATH, list, max);
+static int scan_source(WINDOW *win, char **list, int max, const char *src_path, const char *label) {
+    int count = FILE_ALL_LIST_GET(src_path, list, max);
     if (count <= 0) {
+        char msg[128];
+        snprintf(msg, sizeof(msg), "[SYSTEM] No files found in %s.", label);
+
         UI_CLEAR_WINDOW(win);
-        UI_PRINT_CENTERED(win, UI_GET_WIN_CENTER_Y(0), "[SYSTEM] No files found in Ingest Zone.");
+        UI_PRINT_CENTERED(win, UI_GET_WIN_CENTER_Y(0), msg);
         UI_PRINT_CENTERED(win, UI_Win_Height - 2, "Press [q/ESC] to return...");
         wrefresh(win);
         wgetch(win);
@@ -51,7 +56,40 @@ static int scan_ingest(WINDOW *win, char **list, int max) {
 }
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
- *  커서 범위 초과 보정 (파일이 삭제되어 목록이 줄었을 때 대비).
+ *  경로가 디렉토리인지 확인
+ */
+static int is_directory(const char *path) {
+    struct stat st;
+    if (stat(path, &st) != 0) return 0;
+    return S_ISDIR(st.st_mode);
+}
+
+/* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
+ *  [포인터 최적화]
+ *  통짜 할당된 포인터 배열을 in-place(제자리)로 포인터만 스왑/압축하여
+ *  추가 free/malloc 없이 디렉토리를 필터링함.
+ */
+static int filter_out_directories(char **list, int count, const char *base_path) {
+    int write_idx = 0;
+    char full[PATH_BUFFER_MAX];
+
+    for (int i = 0; i < count; i++) {
+        snprintf(full, sizeof(full), "%s%s", base_path, list[i]);
+
+        if (is_directory(full)) {
+            continue;
+        }
+
+        if (write_idx != i) {
+            list[write_idx] = list[i];
+        }
+        write_idx++;
+    }
+    return write_idx;
+}
+
+/* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
+ *  커서 범위 초과 보정
  */
 static void clamp_cursor(int *cursor, int count) {
     if (*cursor >= count) *cursor = count - 1;
@@ -59,14 +97,14 @@ static void clamp_cursor(int *cursor, int count) {
 }
 
 /*===========================================================================
- *  INSfunc_handle_file_add — INGEST → ROS 복사 (덮어쓰기/중복 처리 포함)
+ *  INSfunc_handle_file_add — INGEST → ROS 복사
  *==========================================================================*/
 int INSfunc_handle_file_add(WINDOW *data_win) {
     static int sub_cursor = 0;
     char *file_list[100] = {0};
 
     while (1) {
-        int file_count = scan_ingest(data_win, file_list, 100);
+        int file_count = scan_source(data_win, file_list, 100, INGEST_PATH, "Ingest Zone");
         if (file_count <= 0) { sub_cursor = 0; return 0; }
 
         clamp_cursor(&sub_cursor, file_count);
@@ -93,7 +131,6 @@ int INSfunc_handle_file_add(WINDOW *data_win) {
             return 0;
         }
 
-        // 과도하게 할당된 버퍼 크기를 512 바이트로 축소 최적화
         char src[PATH_BUFFER_MAX], dest[PATH_BUFFER_MAX];
         snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, file_list[choice]);
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH,    file_list[choice]);
@@ -124,7 +161,7 @@ int INSfunc_list(WINDOW *data_win) {
     char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(data_win, temp_list, 100);
+        int count = scan_source(data_win, temp_list, 100, INGEST_PATH, "Ingest Zone");
         if (count <= 0) return 0;
 
         clamp_cursor(&list_cursor, count);
@@ -140,15 +177,27 @@ int INSfunc_list(WINDOW *data_win) {
 }
 
 /*===========================================================================
- *  INS_copy_to_sector — INGEST → 지정 섹터 복사 (EDS / BKS 공용)
+ *  INS_copy_to_sector — 지정 경로 → 지정 섹터 복사 (EDS / BKS 공용)
  *==========================================================================*/
-int INS_copy_to_sector(WINDOW *data_win, const char *dest_path, const char *sector_name) {
+int INS_copy_to_sector(WINDOW *data_win, const char *src_path, const char *dest_path, const char *sector_name) {
     static int copy_cursor = 0;
     char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(data_win, temp_list, 100);
+        int count = scan_source(data_win, temp_list, 100, src_path, "Storage");
         if (count <= 0) return 0;
+
+        count = filter_out_directories(temp_list, count, src_path);
+
+        if (count <= 0) {
+            free_list(temp_list, 100);
+            UI_CLEAR_WINDOW(data_win);
+            UI_PRINT_CENTERED(data_win, UI_GET_WIN_CENTER_Y(0), "[SYSTEM] No copyable files (only folders) found.");
+            UI_PRINT_CENTERED(data_win, UI_Win_Height - 2, "Press [q/ESC] to return...");
+            wrefresh(data_win);
+            wgetch(data_win);
+            return 0;
+        }
 
         clamp_cursor(&copy_cursor, count);
 
@@ -158,12 +207,7 @@ int INS_copy_to_sector(WINDOW *data_win, const char *dest_path, const char *sect
         int choice = SECTOR_MENU_WIN(data_win, title, (const char **)temp_list, count,
                                      &copy_cursor, SIGN_LEFT_ALIGN);
 
-        if (choice == SIGN_KEY_CHANGED) {
-            free_list(temp_list, count);
-            continue;
-        }
-
-        if (choice == SIGN_REFRESH) {
+        if (choice == SIGN_KEY_CHANGED || choice == SIGN_REFRESH) {
             free_list(temp_list, count);
             continue;
         }
@@ -173,10 +217,9 @@ int INS_copy_to_sector(WINDOW *data_win, const char *dest_path, const char *sect
             return 0;
         }
 
-        // 버퍼 다이어트 완료
         char src[PATH_BUFFER_MAX], dest[PATH_BUFFER_MAX];
-        snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, temp_list[choice]);
-        snprintf(dest, sizeof(dest), "%s%s", dest_path,   temp_list[choice]);
+        snprintf(src,  sizeof(src),  "%s%s", src_path,  temp_list[choice]);
+        snprintf(dest, sizeof(dest), "%s%s", dest_path, temp_list[choice]);
 
         status_msg(data_win, FILE_COPY(src, dest)
             ? "SUCCESS: File sent."
@@ -186,9 +229,8 @@ int INS_copy_to_sector(WINDOW *data_win, const char *dest_path, const char *sect
     }
 }
 
-/* 래퍼 함수 */
-int INS_copy_to_eds(WINDOW *data_win) { return INS_copy_to_sector(data_win, EDS_PATH, "EDS"); }
-int INS_copy_to_bks(WINDOW *data_win) { return INS_copy_to_sector(data_win, BKS_PATH, "BKS"); }
+int INS_copy_to_eds(WINDOW *data_win) { return INS_copy_to_sector(data_win, INGEST_PATH, EDS_PATH, "EDS"); }
+int INS_copy_to_bks(WINDOW *data_win) { return INS_copy_to_sector(data_win, INGEST_PATH, BKS_PATH, "BKS"); }
 
 /*===========================================================================
  *  INS_quick_duplicate_check — ROS 내 중복 존재 여부 스캔
@@ -198,7 +240,7 @@ int INS_quick_duplicate_check(WINDOW *data_win) {
     char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(data_win, temp_list, 100);
+        int count = scan_source(data_win, temp_list, 100, INGEST_PATH, "Ingest Zone");
         if (count <= 0) return 0;
 
         clamp_cursor(&scan_cursor, count);
@@ -207,12 +249,7 @@ int INS_quick_duplicate_check(WINDOW *data_win) {
                                      (const char **)temp_list, count,
                                      &scan_cursor, SIGN_LEFT_ALIGN);
 
-        if (choice == SIGN_KEY_CHANGED) {
-            free_list(temp_list, count);
-            continue;
-        }
-
-        if (choice == SIGN_REFRESH) {
+        if (choice == SIGN_KEY_CHANGED || choice == SIGN_REFRESH) {
             free_list(temp_list, count);
             continue;
         }
@@ -222,7 +259,6 @@ int INS_quick_duplicate_check(WINDOW *data_win) {
             return 0;
         }
 
-        // 버퍼 다이어트 완료
         char dest[PATH_BUFFER_MAX];
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH, temp_list[choice]);
 
