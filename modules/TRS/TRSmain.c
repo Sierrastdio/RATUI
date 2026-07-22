@@ -3,13 +3,13 @@
 #include "TRSfunc.h"
 
 void TRS_MAIN_LOOP() {
-    const char *trs_items[] = {
+    static const char *trs_items[] = {
         "[1] ",
         "[2] ",
         "[3] ",
         "[BACK] To Home"
     };
-    int trs_count = 4;
+    const int trs_count = (int)(sizeof(trs_items) / sizeof(trs_items[0]));
     int trs_cursor = 0;
 
     while(1) {

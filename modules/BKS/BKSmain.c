@@ -3,14 +3,14 @@
 #include "BKSfunc.h"
 
 void BKS_MAIN_LOOP() {
-    const char *bks_items[] = {
+    static const char *bks_items[] = {
         "[1]",
         "[2]",
         "[3]",
         "[BACK] To Home",
     };
 
-    int bks_count = 4;
+    const int bks_count = (int)(sizeof(bks_items) / sizeof(bks_items[0]));
     int bks_cursor = 0;
 
     while(1) {

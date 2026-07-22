@@ -3,23 +3,12 @@
 #include <stdlib.h>
 #include "PATH_CONFIG.h"
 
-#define Config_ext ".ratui"
-
 // 1. 전역 포인터 변수 초기화 (기초값 NULL)
 const char *INGEST_PATH = NULL;
 const char *ROS_PATH    = NULL;
 const char *EDS_PATH    = NULL;
 const char *BKS_PATH    = NULL;
 const char *TRS_PATH    = NULL;
-
-// 개행 및 공백/인용구 제거 함수
-void STRIP_NEWLINE(char *str) {
-    size_t len = strlen(str);
-    while (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r' || str[len - 1] == ' ' || str[len - 1] == '"')) {
-        str[len - 1] = '\0';
-        len--;
-    }
-}
 
 // 안전한 포인터 할당 헬퍼 함수 (기존 메모리 해제 후 할당)
 static void SET_PATH_VAL(const char **target, const char *val) {

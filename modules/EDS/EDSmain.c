@@ -3,13 +3,13 @@
 #include "EDSfunc.h"
 
 void EDS_MAIN_LOOP() {
-    const char *eds_items[] = {
+    static const char *eds_items[] = {
         "[1] 앙 기모띠",
         "[2]",
         "[3]",
         "[BACK] To Home",
     };
-    int eds_count = 4;
+    const int eds_count = (int)(sizeof(eds_items) / sizeof(eds_items[0]));
     int eds_cursor = 0;
 
     while(1) {

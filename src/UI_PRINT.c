@@ -1,5 +1,6 @@
 #include "UI_PRINT.h"
 #include <ncurses.h>
+#include <string.h>
 
 // 전역 변수 메모리 실체 할당
 int UI_Center_x = 0;
@@ -11,15 +12,9 @@ int UI_Start_Y = 0;
 int UI_Left_X = 0;
 int UI_Right_X = 0;
 
-// 기존 전체 화면(COLS) 기준 텍스트 중앙 X좌표 계산 함수 (유지)
 int UI_GET_CENTER_X(int textlen)
 {
-    if (textlen <= 0) {
-        UI_Center_x = 0;
-        return 0;
-    }
-
-    if (textlen >= COLS) {
+    if (textlen <= 0 || textlen >= COLS) {
         UI_Center_x = 0;
         return 0;
     }
@@ -28,7 +23,6 @@ int UI_GET_CENTER_X(int textlen)
     return UI_Center_x;
 }
 
-// [추가] 왼쪽 윈도우 내부 출력용 중앙 X좌표 계산 함수
 int UI_GET_LEFT_WIN_CENTER_X(int textlen)
 {
     if (textlen <= 0 || textlen >= UI_Win_Width) {
@@ -40,27 +34,33 @@ int UI_GET_LEFT_WIN_CENTER_X(int textlen)
     return UI_Center_x;
 }
 
-// [추가] 오른쪽 윈도우 내부 출력용 중앙 X좌표 계산 함수 (좌우 폭이 동일하므로 UI_Win_Width 재활용)
 int UI_GET_RIGHT_WIN_CENTER_X(int textlen)
 {
-    if (textlen <= 0 || textlen >= UI_Win_Width) {
-        UI_Center_x = 1;
-        return 1;
-    }
-
-    UI_Center_x = (UI_Win_Width - textlen) / 2;
-    return UI_Center_x;
+    return UI_GET_LEFT_WIN_CENTER_X(textlen);
 }
 
-// 현재 시스템 터미널(LINES, COLS) 기준 전체 분할 UI 레이아웃 크기를 일괄 계산 및 갱신
+int UI_GET_WIN_CENTER_Y(int offset)
+{
+    UI_Center_y = (UI_Win_Height / 2) + offset;
+
+    if (UI_Center_y < 1) {
+        UI_Center_y = 1;
+    } else if (UI_Center_y >= UI_Win_Height - 1) {
+        UI_Center_y = UI_Win_Height - 2;
+        if (UI_Center_y < 1) UI_Center_y = 1;
+    }
+
+    return UI_Center_y;
+}
+
 void UI_INIT_LAYOUT(void)
 {
     int total_usable_w = COLS - 4;
-    if (total_usable_w < 2) total_usable_w = 2; // 최소 안전폭 확보
+    if (total_usable_w < 2) total_usable_w = 2;
 
     UI_Win_Width = total_usable_w / 2;
     UI_Win_Height = LINES - 6;
-    if (UI_Win_Height < 3) UI_Win_Height = 3; // 타이틀 겹침 방지 최소 높이 확보
+    if (UI_Win_Height < 3) UI_Win_Height = 3;
 
     UI_Start_Y = 2;
     UI_Left_X = 2;
@@ -80,4 +80,49 @@ WINDOW *UI_CREATE_WINDOW(int height, int width, int start_y, int start_x)
     keypad(win, TRUE);
 
     return win;
+}
+
+WINDOW *UI_CREATE_FOOTER_WINDOW(void)
+{
+    WINDOW *win = newwin(3, COLS - 4, LINES - 4, 2);
+    if (win == NULL) return NULL;
+
+    box(win, 0, 0);
+    mvwprintw(win, 1, 2, "Use UP/DOWN to Navigate. Press [ENTER] to select. (ESC/q: Back)");
+    wrefresh(win);
+
+    return win;
+}
+
+void UI_CLEAR_WINDOW(WINDOW *win)
+{
+    if (win == NULL) return;
+
+    werase(win);
+    box(win, 0, 0);
+}
+
+void UI_PRINT_CENTERED(WINDOW *win, int y, const char *text)
+{
+    int win_width;
+    int text_len;
+    int x;
+
+    if (win == NULL || text == NULL) return;
+
+    win_width = getmaxx(win);
+    text_len = (int)strlen(text);
+    x = (win_width - text_len) / 2;
+    if (x < 1) x = 1;
+
+    mvwprintw(win, y, x, "%s", text);
+}
+
+void UI_PRINT_IDLE(WINDOW *win)
+{
+    if (win == NULL) return;
+
+    UI_CLEAR_WINDOW(win);
+    UI_PRINT_CENTERED(win, UI_GET_WIN_CENTER_Y(0), "[ No Active Task ]");
+    wrefresh(win);
 }

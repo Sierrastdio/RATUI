@@ -106,7 +106,7 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     }
 }
 
-// 분할 윈도우 전용 서브 메뉴
+// 윈도우(WINDOW*) 전용 서브 메뉴
 int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int count, int *cursor, int max_len) {
     int win_width = getmaxx(win);
     int win_height = getmaxy(win);
@@ -130,9 +130,8 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     werase(win);
     box(win, 0, 0);
 
-    // 상단 타이틀 정렬 (UI_PRINT 전역 헬퍼 기반 폭 계산)
-    UI_GET_RIGHT_WIN_CENTER_X((int)strlen(title));
-    int title_x = UI_Center_x;
+    // 전달받은 윈도우의 실제 가로폭(win_width)을 기준으로 타이틀 중앙 좌표 계산
+    int title_x = (win_width - (int)strlen(title)) / 2;
     if (title_x < 1) title_x = 1;
 
     wattron(win, A_REVERSE);
@@ -160,6 +159,8 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
 
     switch (ch) {
         case 27:
+        case 'q':
+        case 'Q':
             return SIGN_CANCEL;
 
         case KEY_UP:
@@ -174,6 +175,18 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
         case 'S':
             if (*cursor < count - 1) (*cursor)++;
             else *cursor = 0;
+            return SIGN_KEY_CHANGED;
+
+        // [추가] PgUp(페이지 업) 키입력 복구
+        case KEY_PPAGE:
+            *cursor -= MAX_VISIBLE;
+            if (*cursor < 0) *cursor = 0;
+            return SIGN_KEY_CHANGED;
+
+        // [추가] PgDn(페이지 다운) 키입력 복구
+        case KEY_NPAGE:
+            *cursor += MAX_VISIBLE;
+            if (*cursor >= count) *cursor = count - 1;
             return SIGN_KEY_CHANGED;
 
         case '\n':

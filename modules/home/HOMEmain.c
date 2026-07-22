@@ -6,20 +6,20 @@
 #include "UI_PRINT.h"
 
 int main() {
-    LOAD_CONFIG();          /*  config.rtuconf 의 설정 불러오기   */
-    ENSURE_DIRECTORIES();   /*  PATH_CONFIG.h 의 함수 */
+    LOAD_CONFIG();          /* config.rtuconf 의 설정 불러오기 */
+    ENSURE_DIRECTORIES();   /* PATH_CONFIG.h 의 함수 */
 
-    const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[TRS]", "[EXIT]"};
-    int home_count = 6;
+    static const char *home_items[] = {"[ROS]", "[INS]", "[EDS]", "[BKS]", "[TRS]", "[EXIT]"};
+    const int home_count = (int)(sizeof(home_items) / sizeof(home_items[0]));
     int currentSEC = HOME; //'HOME'은 SECTOR_MENU.h 에서 옴.
     int cursor = 0;
     int result = 0;
 
-    setenv("ESCDELAY", "25", 1);    /*  ESC 키 반응 기본값 1000ms에서 25ms 로 단축  */
-    initscr();              /*  ncurses 모드 시작   */
-    noecho();               /*  사용자가 키보드로 입력하는 글자가 터미널 화면에 보이지 않게(Echo 금지) 만드는 함수  */
-    curs_set(0);            /*  터미널 커서 숨기기    */
-    keypad(stdscr, TRUE);   /*  특수키 입력 활성화(F1~F12, 방향키, PgUp, PgDn 등)   */
+    setenv("ESCDELAY", "25", 1);    /* ESC 키 반응 기본값 1000ms에서 25ms 로 단축 */
+    initscr();              /* ncurses 모드 시작 */
+    noecho();               /* 사용자가 키보드로 입력하는 글자가 터미널 화면에 보이지 않게(Echo 금지) 만드는 함수 */
+    curs_set(0);            /* 터미널 커서 숨기기 */
+    keypad(stdscr, TRUE);   /* 특수키 입력 활성화(F1~F12, 방향키, PgUp, PgDn 등) */
 
     while (1) {
         if (currentSEC == HOME) {
@@ -30,10 +30,10 @@ int main() {
             UI_INIT_LAYOUT();
 
             // 2. 대시보드용 단일 메인 윈도우 생성
-            int main_win_w = COLS - 4;
-            int main_win_h = LINES - 6;
-            int main_win_y = 2;
-            int main_win_x = 2;
+            const int main_win_w = COLS - 4;
+            const int main_win_h = LINES - 6;
+            const int main_win_y = 2;
+            const int main_win_x = 2;
 
             WINDOW *main_win = UI_CREATE_WINDOW(main_win_h, main_win_w, main_win_y, main_win_x);
 
@@ -70,7 +70,7 @@ int main() {
                 if (result >= 0) {
                     delwin(main_win); // 섹터 진입 전에 윈도우 리소스 해제
 
-                    /*  결괏값(정수형)에 따라 각 섹터의 메인루프를 실행해도록 함     */
+                    /* 결괏값(정수형)에 따라 각 섹터의 메인루프를 실행해도록 함 */
                     switch(result){
                         case 0: ROS_MAIN_LOOP(); break;
                         case 1: INS_MAIN_LOOP(); break;

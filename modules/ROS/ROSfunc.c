@@ -11,7 +11,6 @@
 #include "PATH_CONFIG.h"
 #include "UI_PRINT.h"
 
-// 리눅스 파일 이름 최대치(255) + 태그 정렬 공간을 고려한 버퍼 크기
 #define DISPLAY_NAME_MAX 264
 
 static char current_view_path[512];
@@ -26,6 +25,38 @@ static int is_directory(const char *path) {
     return S_ISDIR(statbuf.st_mode);
 }
 
+// 경로가 루트 경로인지 비교하는 안전한 함수
+static int is_at_root_path(const char *current, const char *root) {
+    char norm_current[512];
+    char norm_root[512];
+
+    strncpy(norm_current, current, sizeof(norm_current) - 1);
+    strncpy(norm_root, root, sizeof(norm_root) - 1);
+
+    int len_c = strlen(norm_current);
+    int len_r = strlen(norm_root);
+
+    if (len_c > 1 && norm_current[len_c - 1] == '/') norm_current[len_c - 1] = '\0';
+    if (len_r > 1 && norm_root[len_r - 1] == '/') norm_root[len_r - 1] = '\0';
+
+    return (strcmp(norm_current, norm_root) == 0);
+}
+
+// 상위 경로로 이동시키는 함수
+static void navigate_to_parent_dir() {
+    int len = strlen(current_view_path);
+    if (len > 0 && current_view_path[len - 1] == '/') {
+        current_view_path[len - 1] = '\0';
+    }
+    
+    char *last = strrchr(current_view_path, '/');
+    if (last) {
+        *(last + 1) = '\0';
+    } else {
+        strcpy(current_view_path, ROS_PATH);
+    }
+}
+
 // 우측 윈도우 영역 안에서 동작하는 저장소 관리자
 void ROSfunc_manage_storage(WINDOW *data_win) {
     int cursor = 0;
@@ -33,8 +64,8 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
     if (strlen(current_view_path) == 0) INIT_ROS_PATH();
 
     while (1) {
-        char *raw_list[100];
-        char *display_list[100];
+        char *raw_list[100] = {0};
+        char *display_list[100] = {0};
 
         // 1. 파일 리스트 가져오기
         int count = FILE_ALL_LIST_GET(current_view_path, raw_list, 100);
@@ -44,22 +75,19 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             werase(data_win);
             box(data_win, 0, 0);
 
-            // 윈도우 내부 하단에 빈 디렉토리 안내문 배치
-            mvwprintw(data_win, UI_Win_Height - 2, 2, "Empty Directory.");
-            mvwprintw(data_win, UI_Win_Height - 1, 2, "Path: %s", current_view_path);
+            mvwprintw(data_win, UI_Win_Height - 3, 2, "Empty Directory.");
+            mvwprintw(data_win, UI_Win_Height - 2, 2, "Path: %s", current_view_path);
+            mvwprintw(data_win, UI_Win_Height - 1, 2, "Press [q/ESC] to return...");
             wrefresh(data_win);
 
+            keypad(data_win, TRUE);
             int ch = wgetch(data_win);
+
             if (ch == 27 || ch == 'q' || ch == 'Q') {
-                if (strcmp(current_view_path, ROS_PATH) == 0) break;
-                else {
-                    char *last = strrchr(current_view_path, '/');
-                    if (last) {
-                        *last = '\0';
-                        last = strrchr(current_view_path, '/');
-                        if (last) *(last + 1) = '\0';
-                        else strcpy(current_view_path, ROS_PATH);
-                    }
+                if (is_at_root_path(current_view_path, ROS_PATH)) {
+                    break; // 루트 경로면 완전 탈출
+                } else {
+                    navigate_to_parent_dir();
                     continue;
                 }
             }
@@ -69,47 +97,49 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
         // 2. 표시용 리스트 생성
         for (int i = 0; i < count; i++) {
             char full_temp[1024];
-            sprintf(full_temp, "%s%s", current_view_path, raw_list[i]);
+            snprintf(full_temp, sizeof(full_temp), "%s%s", current_view_path, raw_list[i]);
             display_list[i] = (char *)malloc(DISPLAY_NAME_MAX);
 
-            // 메모리 할당 예외 처리
             if (display_list[i] == NULL) {
                 for (int j = 0; j < i; j++) free(display_list[j]);
                 for (int j = 0; j < count; j++) free(raw_list[j]);
                 return;
             }
 
-            if (is_directory(full_temp)) sprintf(display_list[i], "[DIR]  %s", raw_list[i]);
-            else sprintf(display_list[i], "[FILE] %s", raw_list[i]);
+            if (is_directory(full_temp)) {
+                snprintf(display_list[i], DISPLAY_NAME_MAX, "[DIR]  %s", raw_list[i]);
+            } else {
+                snprintf(display_list[i], DISPLAY_NAME_MAX, "[FILE] %s", raw_list[i]);
+            }
         }
 
         char title[1024];
-        sprintf(title, "EXPLORING: %s", current_view_path);
+        snprintf(title, sizeof(title), "EXPLORING: %s", current_view_path);
 
         // 3. 우측 데이터 윈도우 안에서 리스트 표출 및 커서 처리
         int result = SECTOR_MENU_WIN(data_win, title, (const char **)display_list, count, &cursor, SIGN_LEFT_ALIGN);
 
-        // [결과 1] 취소 또는 상위 이동
+        // [결과 1] 취소 신호 (Q, ESC)
         if (result == SIGN_CANCEL) {
-            if (strcmp(current_view_path, ROS_PATH) == 0) {
-                for (int i = 0; i < count; i++) { free(raw_list[i]); free(display_list[i]); }
-                break;
+            // 사용한 메모리 즉시 해제
+            for (int i = 0; i < count; i++) {
+                if (raw_list[i]) free(raw_list[i]);
+                if (display_list[i]) free(display_list[i]);
+            }
+
+            if (is_at_root_path(current_view_path, ROS_PATH)) {
+                break; // ROS 루트 경로면 함수 완전히 탈출 (이전 메뉴로 복귀)
             } else {
-                char *last = strrchr(current_view_path, '/');
-                if (last) {
-                    *last = '\0';
-                    last = strrchr(current_view_path, '/');
-                    if (last) *(last + 1) = '\0';
-                    else strcpy(current_view_path, ROS_PATH);
-                }
+                navigate_to_parent_dir(); // 하위 디렉토리면 상위 폴더로 이동
+                cursor = 0;
+                continue;
             }
         }
         // [결과 2] d키로 삭제
         else if (result == SIGN_DELETE) {
             char target[1024];
-            sprintf(target, "%s%s", current_view_path, raw_list[cursor]);
+            snprintf(target, sizeof(target), "%s%s", current_view_path, raw_list[cursor]);
 
-            // 우측 윈도우 하단 영역에 삭제 질문 가이드 노출
             mvwprintw(data_win, UI_Win_Height - 2, 2, ">> DELETE %s? (y/n)", raw_list[cursor]);
             wrefresh(data_win);
 
@@ -117,17 +147,19 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             if (confirm_ch == 'y' || confirm_ch == 'Y') {
                 if (is_directory(target)) {
                     char cmd[1100];
-                    sprintf(cmd, "rm -rf \"%s\"", target);
+                    snprintf(cmd, sizeof(cmd), "rm -rf \"%s\"", target);
                     if (system(cmd) == -1) {
-                        // 컴파일러 경고 방지
+                        // 컴파일러 경고 무시
                     }
-                } else remove(target);
+                } else {
+                    remove(target);
+                }
             }
         }
-        // [결과 3] 엔터로 진입
+        // [결과 3] 엔터로 디렉토리 진입
         else if (result >= 0) {
             char target[1024];
-            sprintf(target, "%s%s", current_view_path, raw_list[result]);
+            snprintf(target, sizeof(target), "%s%s", current_view_path, raw_list[result]);
             if (is_directory(target)) {
                 strcat(current_view_path, raw_list[result]);
                 strcat(current_view_path, "/");
@@ -135,40 +167,40 @@ void ROSfunc_manage_storage(WINDOW *data_win) {
             }
         }
 
-        for (int i = 0; i < count; i++) { free(raw_list[i]); free(display_list[i]); }
+        // 메모리 해제
+        for (int i = 0; i < count; i++) {
+            if (raw_list[i]) free(raw_list[i]);
+            if (display_list[i]) free(display_list[i]);
+        }
     }
 }
 
-// 우측 윈도우 영역 안에서 동작하는 정보 디스플레이 (UI_GET_RIGHT_WIN_CENTER_X 적용)
+// 우측 윈도우 영역 안에서 동작하는 정보 디스플레이
 void ROSfunc_show_info(WINDOW *data_win) {
     werase(data_win);
     box(data_win, 0, 0);
 
-    // 1. 헤더 (우측 분할 윈도우 전용 중앙 계산 함수 적용)
     char header_str[] = " === ROS STORAGE STATUS === ";
     UI_GET_RIGHT_WIN_CENTER_X((int)strlen(header_str));
-    UI_Center_y = (UI_Win_Height / 2) - 3;
+    UI_GET_WIN_CENTER_Y(-3);
 
     wattron(data_win, A_REVERSE);
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", header_str);
     wattroff(data_win, A_REVERSE);
 
-    // 2. 루트 경로 표시
     char path_str[256];
-    sprintf(path_str, "Current Root: %s", ROS_PATH);
+    snprintf(path_str, sizeof(path_str), "Current Root: %s", ROS_PATH);
     UI_GET_RIGHT_WIN_CENTER_X((int)strlen(path_str));
-    UI_Center_y = (UI_Win_Height / 2) - 1;
+    UI_GET_WIN_CENTER_Y(-1);
 
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", path_str);
 
-    // 3. 컨트롤 설명 표시
     char desc_str[] = "Control: [ENTER] to Enter DIR, [d] to Delete Any";
     UI_GET_RIGHT_WIN_CENTER_X((int)strlen(desc_str));
-    UI_Center_y = (UI_Win_Height / 2) + 1;
+    UI_GET_WIN_CENTER_Y(1);
 
     mvwprintw(data_win, UI_Center_y, UI_Center_x, "%s", desc_str);
 
-    // 4. 하단 안내문 (종료 가이드 매핑)
     char footer_str[] = "Press [ESC] or [Q] to return...";
     UI_GET_RIGHT_WIN_CENTER_X((int)strlen(footer_str));
     UI_Center_y = UI_Win_Height - 2;

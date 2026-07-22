@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#undef FILE_EXISTENCE_CHECK
+#undef FILE_SIZE_GET
+
 int FILE_EXISTENCE_CHECK(const char *path) {
     return (access(path, F_OK) == 0) ? 1 : 0;
 }

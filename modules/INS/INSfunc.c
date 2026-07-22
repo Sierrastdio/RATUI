@@ -26,21 +26,26 @@ static void free_list(char **list, int count) {
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
  *  상태바(하단 2번째 줄)에 메시지를 출력하고 키 입력을 대기 (전역 변수 UI_Win_Height 활용).
  */
-static void status_msg(const char *msg) {
-    move(UI_Win_Height - 2, 2); clrtoeol();
-    mvprintw(UI_Win_Height - 2, 2, "%s", msg);
-    refresh();
-    getch();
+static void status_msg(WINDOW *win, const char *msg) {
+    if (win == NULL) return;
+
+    mvwprintw(win, UI_Win_Height - 2, 2, "%-*s", UI_Win_Width - 4, msg);
+    wrefresh(win);
+    wgetch(win);
 }
 
 /* ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
  *  INGEST_PATH 파일 목록 스캔 + 빈 목록 처리를 한 곳에서 담당.
  *  반환값: 스캔된 파일 수 (0이면 메시지 출력 후 0 반환)
  */
-static int scan_ingest(char **list, int max) {
+static int scan_ingest(WINDOW *win, char **list, int max) {
     int count = FILE_ALL_LIST_GET(INGEST_PATH, list, max);
     if (count <= 0) {
-        status_msg("[SYSTEM] No files found in Ingest Zone.");
+        UI_CLEAR_WINDOW(win);
+        UI_PRINT_CENTERED(win, UI_GET_WIN_CENTER_Y(0), "[SYSTEM] No files found in Ingest Zone.");
+        UI_PRINT_CENTERED(win, UI_Win_Height - 2, "Press [q/ESC] to return...");
+        wrefresh(win);
+        wgetch(win);
     }
     return count;
 }
@@ -56,28 +61,34 @@ static void clamp_cursor(int *cursor, int count) {
 /*===========================================================================
  *  INSfunc_handle_file_add — INGEST → ROS 복사 (덮어쓰기/중복 처리 포함)
  *==========================================================================*/
-int INSfunc_handle_file_add() {
+int INSfunc_handle_file_add(WINDOW *data_win) {
     static int sub_cursor = 0;
-    char *file_list[100];
+    char *file_list[100] = {0};
 
     while (1) {
-        int file_count = scan_ingest(file_list, 100);
+        int file_count = scan_ingest(data_win, file_list, 100);
         if (file_count <= 0) { sub_cursor = 0; return 0; }
 
         clamp_cursor(&sub_cursor, file_count);
 
-        int choice = SECTOR_MENU("SELECT FILE TO INGEST",
-                                 (const char **)file_list, file_count,
-                                 &sub_cursor, INS);
+        int choice = SECTOR_MENU_WIN(data_win, "SELECT FILE TO INGEST",
+                                     (const char **)file_list, file_count,
+                                     &sub_cursor, SIGN_LEFT_ALIGN);
 
-        if (choice == -3) {                         // [r] 새로고침
+        if (choice == SIGN_KEY_CHANGED) {
             free_list(file_list, file_count);
-            mvprintw(UI_Win_Height - 1, 2, " >> List Updated. ");
-            refresh(); napms(150);
             continue;
         }
 
-        if (choice == -1) {                         // ESC / 뒤로
+        if (choice == SIGN_REFRESH) {
+            free_list(file_list, file_count);
+            mvwprintw(data_win, UI_Win_Height - 2, 2, " >> List Updated. ");
+            wrefresh(data_win);
+            napms(150);
+            continue;
+        }
+
+        if (choice == SIGN_CANCEL) {
             free_list(file_list, file_count);
             return 0;
         }
@@ -87,23 +98,20 @@ int INSfunc_handle_file_add() {
         snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, file_list[choice]);
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH,    file_list[choice]);
 
-        move(UI_Win_Height - 2, 2); clrtoeol();
-
         if (FILE_EXISTENCE_CHECK(dest)) {
             if (FILE_DUPLICATE_CHECK(src, dest)) {
-                mvprintw(UI_Win_Height - 2, 2, "CRITICAL: Identical file already exists!");
+                status_msg(data_win, "CRITICAL: Identical file already exists!");
             } else {
-                mvprintw(UI_Win_Height - 2, 2, FILE_COPY(src, dest)
+                status_msg(data_win, FILE_COPY(src, dest)
                     ? "SUCCESS: File Overwritten."
                     : "ERROR: Overwrite failed.");
             }
         } else {
-            mvprintw(UI_Win_Height - 2, 2, FILE_COPY(src, dest)
+            status_msg(data_win, FILE_COPY(src, dest)
                 ? "SUCCESS: File copied to ROS."
                 : "ERROR: Copy failed.");
         }
 
-        refresh(); getch();
         free_list(file_list, file_count);
     }
 }
@@ -111,35 +119,35 @@ int INSfunc_handle_file_add() {
 /*===========================================================================
  *  INSfunc_list — INGEST 파일 목록 보기 (읽기 전용)
  *==========================================================================*/
-int INSfunc_list() {
+int INSfunc_list(WINDOW *data_win) {
     static int list_cursor = 0;
-    char *temp_list[100];
+    char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(temp_list, 100);
+        int count = scan_ingest(data_win, temp_list, 100);
         if (count <= 0) return 0;
 
         clamp_cursor(&list_cursor, count);
 
-        int choice = SECTOR_MENU("CURRENT INGEST FILES (View Only)",
-                                 (const char **)temp_list, count,
-                                 &list_cursor, INS);
+        int choice = SECTOR_MENU_WIN(data_win, "CURRENT INGEST FILES (View Only)",
+                                     (const char **)temp_list, count,
+                                     &list_cursor, SIGN_LEFT_ALIGN);
 
         free_list(temp_list, count);
 
-        if (choice == -1) return 0;     // ESC
+        if (choice == SIGN_CANCEL) return 0;
     }
 }
 
 /*===========================================================================
  *  INS_copy_to_sector — INGEST → 지정 섹터 복사 (EDS / BKS 공용)
  *==========================================================================*/
-int INS_copy_to_sector(const char *dest_path, const char *sector_name) {
+int INS_copy_to_sector(WINDOW *data_win, const char *dest_path, const char *sector_name) {
     static int copy_cursor = 0;
-    char *temp_list[100];
+    char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(temp_list, 100);
+        int count = scan_ingest(data_win, temp_list, 100);
         if (count <= 0) return 0;
 
         clamp_cursor(&copy_cursor, count);
@@ -147,15 +155,20 @@ int INS_copy_to_sector(const char *dest_path, const char *sector_name) {
         char title[64];
         snprintf(title, sizeof(title), "COPY TO %s - SELECT FILE", sector_name);
 
-        int choice = SECTOR_MENU(title, (const char **)temp_list, count,
-                                 &copy_cursor, INS);
+        int choice = SECTOR_MENU_WIN(data_win, title, (const char **)temp_list, count,
+                                     &copy_cursor, SIGN_LEFT_ALIGN);
 
-        if (choice == -3) {
+        if (choice == SIGN_KEY_CHANGED) {
             free_list(temp_list, count);
             continue;
         }
 
-        if (choice == -1) {
+        if (choice == SIGN_REFRESH) {
+            free_list(temp_list, count);
+            continue;
+        }
+
+        if (choice == SIGN_CANCEL) {
             free_list(temp_list, count);
             return 0;
         }
@@ -165,7 +178,7 @@ int INS_copy_to_sector(const char *dest_path, const char *sector_name) {
         snprintf(src,  sizeof(src),  "%s%s", INGEST_PATH, temp_list[choice]);
         snprintf(dest, sizeof(dest), "%s%s", dest_path,   temp_list[choice]);
 
-        status_msg(FILE_COPY(src, dest)
+        status_msg(data_win, FILE_COPY(src, dest)
             ? "SUCCESS: File sent."
             : "ERROR: Copy failed.");
 
@@ -174,32 +187,37 @@ int INS_copy_to_sector(const char *dest_path, const char *sector_name) {
 }
 
 /* 래퍼 함수 */
-int INS_copy_to_eds() { return INS_copy_to_sector(EDS_PATH, "EDS"); }
-int INS_copy_to_bks() { return INS_copy_to_sector(BKS_PATH, "BKS"); }
+int INS_copy_to_eds(WINDOW *data_win) { return INS_copy_to_sector(data_win, EDS_PATH, "EDS"); }
+int INS_copy_to_bks(WINDOW *data_win) { return INS_copy_to_sector(data_win, BKS_PATH, "BKS"); }
 
 /*===========================================================================
  *  INS_quick_duplicate_check — ROS 내 중복 존재 여부 스캔
  *==========================================================================*/
-int INS_quick_duplicate_check() {
+int INS_quick_duplicate_check(WINDOW *data_win) {
     static int scan_cursor = 0;
-    char *temp_list[100];
+    char *temp_list[100] = {0};
 
     while (1) {
-        int count = scan_ingest(temp_list, 100);
+        int count = scan_ingest(data_win, temp_list, 100);
         if (count <= 0) return 0;
 
         clamp_cursor(&scan_cursor, count);
 
-        int choice = SECTOR_MENU("DUPLICATE SCAN - SELECT FILE",
-                                 (const char **)temp_list, count,
-                                 &scan_cursor, INS);
+        int choice = SECTOR_MENU_WIN(data_win, "DUPLICATE SCAN - SELECT FILE",
+                                     (const char **)temp_list, count,
+                                     &scan_cursor, SIGN_LEFT_ALIGN);
 
-        if (choice == -3) {
+        if (choice == SIGN_KEY_CHANGED) {
             free_list(temp_list, count);
             continue;
         }
 
-        if (choice == -1) {
+        if (choice == SIGN_REFRESH) {
+            free_list(temp_list, count);
+            continue;
+        }
+
+        if (choice == SIGN_CANCEL) {
             free_list(temp_list, count);
             return 0;
         }
@@ -208,7 +226,7 @@ int INS_quick_duplicate_check() {
         char dest[PATH_BUFFER_MAX];
         snprintf(dest, sizeof(dest), "%s%s", ROS_PATH, temp_list[choice]);
 
-        status_msg(FILE_EXISTENCE_CHECK(dest)
+        status_msg(data_win, FILE_EXISTENCE_CHECK(dest)
             ? "RESULT: Found in ROS."
             : "RESULT: Unique (Not in ROS).");
 
