@@ -3,6 +3,12 @@ bin/
 make_rti
 *.o
 
+reader
+
+writer
+
+libarchdb.a
+
 # 백업 및 임시 파일
 *.bak
 *~
