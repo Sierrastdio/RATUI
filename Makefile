@@ -20,7 +20,7 @@ TARGET_DB_LIB := libarchdb.a
 # 소스 파일 및 오브젝트 파일 경로 자동 생성
 # ==========================================
 # 1. include 및 src 폴더 내의 공통 라이브러리 C 소스 파일 스캔
-LIB_SOURCES := $(shell find src -name "*.c" 2>/dev/null)
+LIB_SOURCES := $(shell find include -name "*.c" 2>/dev/null)
 LIB_OBJS    := $(LIB_SOURCES:.c=.o)
 
 # 2. 최상위 경로의 reader.c와 writer.c 소스

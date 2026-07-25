@@ -1,6 +1,0 @@
-# config.rtuconf
-INGEST_PATH=/home/Sierrastdio/INS/
-ROS_STORAGE=/home/Sierrastdio/ROS/
-EDS_STORAGE=/home/Sierrastdio/EDS/
-BKS_STORAGE=/home/Sierrastdio/BKS/
-TRS_STORAGE=/home/Sierrastdio/TRS/
