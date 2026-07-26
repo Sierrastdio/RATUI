@@ -130,7 +130,9 @@ Header files and libraries written in all capital letters contain core functiona
 <img width="1917" height="990" alt="Image" src="https://github.com/user-attachments/assets/56148337-3285-498b-8455-ca44ded54331" />
 - 한 파일에 다른 태그 중복 할당 가능.
 - 태그명은 영어만.
+
 ---------------------------------------------------------
+
 <img width="1916" height="995" alt="Image" src="https://github.com/user-attachments/assets/21e8e66d-faeb-4a06-8341-101b532874df" />
 <img width="1917" height="997" alt="Image" src="https://github.com/user-attachments/assets/759c80eb-ac01-4786-8bb4-cca7a2dafeb5" />
 - 태그명 검색 기능.
