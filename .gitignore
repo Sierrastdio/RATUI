@@ -2,6 +2,7 @@
 bin/
 make_rti
 *.o
+*.db
 
 reader
 
@@ -19,5 +20,3 @@ libarchdb.a
 # 운영체제/에디터 관련
 .DS_Store
 .vscode/
-
-# 소스 코드 및 필수 설정은 추적됨

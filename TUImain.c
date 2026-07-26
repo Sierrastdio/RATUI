@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <stdlib.h>
+#include <locale.h>
 #include "UI_PRINT.h"
 #include "SECTOR_MENU.h"
 #include "TUIfunc.h"
@@ -119,6 +120,10 @@ int main(void)
         fprintf(stderr, "Error: failed to open archive DB in '%s'\n", ARCHDB_BASE_DIR);
         return 1;
     }
+
+    /* 한글 등 멀티바이트 파일명을 제대로 표시하려면 setlocale을 initscr()보다
+     * 먼저 호출해야 한다 (ncurses가 초기화 시점에 로케일을 읽어 문자 폭을 판단함) */
+    setlocale(LC_ALL, "");
 
     initscr();
     cbreak();
