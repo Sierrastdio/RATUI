@@ -79,29 +79,33 @@ make
 
 ## 시스템 구조.
 프로젝트는 다음과 같이 구성되어 있습니다:
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/51390468-8896-4918-a274-65c3a4b38d32" />
 
+<img width="800" alt="System Architecture" src="https://github.com/user-attachments/assets/51390468-8896-4918-a274-65c3a4b38d32" />
+
+---
 
 # 주요 기능
 
 ## 1. 파일에 태그 할당 기능& 검색 기능.
-<img width="1918" height="991" alt="Image" src="https://github.com/user-attachments/assets/5edd4881-82b4-40b1-b708-05eac960e64b" />
-<img width="1917" height="990" alt="Image" src="https://github.com/user-attachments/assets/56148337-3285-498b-8455-ca44ded54331" />
+<img width="800" alt="File Tagging 1" src="https://github.com/user-attachments/assets/5edd4881-82b4-40b1-b708-05eac960e64b" />
+<img width="800" alt="File Tagging 2" src="https://github.com/user-attachments/assets/56148337-3285-498b-8455-ca44ded54331" />
 - 한 파일에 다른 태그 중복 할당 가능.
 - 태그명은 영어만.
 
 ---------------------------------------------------------
 
-<img width="1916" height="995" alt="Image" src="https://github.com/user-attachments/assets/21e8e66d-faeb-4a06-8341-101b532874df" />
-<img width="1917" height="997" alt="Image" src="https://github.com/user-attachments/assets/759c80eb-ac01-4786-8bb4-cca7a2dafeb5" />
+<img width="800" alt="Tag Search 1" src="https://github.com/user-attachments/assets/21e8e66d-faeb-4a06-8341-101b532874df" />
+<img width="800" alt="Tag Search 2" src="https://github.com/user-attachments/assets/759c80eb-ac01-4786-8bb4-cca7a2dafeb5" />
 - 태그명 검색 기능.
 
+---
 
 ## 2. 파일 탐색기 뷰
-<img width="1918" height="986" alt="Image" src="https://github.com/user-attachments/assets/5b439b72-de83-4ce2-a0be-46a4183557c2" />
-<img width="1916" height="989" alt="Image" src="https://github.com/user-attachments/assets/e5890952-7121-41aa-9bdc-ab26c81d0666" />
+<img width="800" alt="File Explorer View 1" src="https://github.com/user-attachments/assets/5b439b72-de83-4ce2-a0be-46a4183557c2" />
+<img width="800" alt="File Explorer View 2" src="https://github.com/user-attachments/assets/e5890952-7121-41aa-9bdc-ab26c81d0666" />
 - 태그를 폴더처럼 취급한 가상 경로 탐색.
 
+---
 
 ## 빌드
 
