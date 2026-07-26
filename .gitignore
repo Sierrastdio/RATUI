@@ -7,6 +7,8 @@ reader
 
 writer
 
+tui
+
 libarchdb.a
 
 # 백업 및 임시 파일

@@ -144,11 +144,9 @@ static int collect_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ct
     return 0;
 }
 
-int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max_ids)
+int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *out_ids, int max_ids)
 {
-    char tags[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
-    int tag_count = core_path_split(path, tags, CORE_MAX_PATH_TAGS);
-    if (tag_count == 0) return 0;
+    if (tag_count <= 0) return 0;
 
     /* 첫 태그로 후보 목록 수집 */
     collect_ctx_t ctx = { out_ids, max_ids, 0 };
@@ -166,4 +164,16 @@ int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max
         result_count = w;
     }
     return result_count;
+}
+
+int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max_ids)
+{
+    char tags_buf[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
+    int tag_count = core_path_split(path, tags_buf, CORE_MAX_PATH_TAGS);
+    if (tag_count == 0) return 0;
+
+    const char *tag_ptrs[CORE_MAX_PATH_TAGS];
+    for (int i = 0; i < tag_count; i++) tag_ptrs[i] = tags_buf[i];
+
+    return core_list_by_tags(db, tag_ptrs, tag_count, out_ids, max_ids);
 }

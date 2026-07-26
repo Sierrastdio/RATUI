@@ -45,4 +45,8 @@ int core_file_has_tag(archdb_t *db, uint32_t file_id, const char *tag);
  * out_ids 에 최대 max_ids 개까지 채우고, 실제로 채운 개수를 반환. */
 int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max_ids);
 
+/* 태그를 배열로 직접 받아 검색 - core_list_by_path와 동작은 같지만
+ * "A/B" 같은 경로 문자열을 거치지 않는다 (태그를 하나씩 입력받는 UI용). */
+int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *out_ids, int max_ids);
+
 #endif /* ARCHDB_CORE_H */
