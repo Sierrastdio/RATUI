@@ -112,7 +112,7 @@ Header files and libraries written in all capital letters contain core functiona
 
 # 라즈베리 아카이브 인터페이스 (Raspberrypi Archive Terminaal_UI_Interface RATUI)
 
-## 소개
+## 프로젝트 소개
 
 라즈베리파이  아카이브 인터페이스 (RATUI)는 라즈베리파이에서 동작하는 가벼운 텍스트 기반 사용자 인터페이스(TUI) 애플리케이션입니다. 개인 아카이브로서 라즈베리파이를 사용할 때 기본적인 파일 탐색기의 기능에 더해 아카이브 관리에 맞는 기능적인 도움을 제공하는것을 목표로 합니다.
 
@@ -123,9 +123,9 @@ Header files and libraries written in all capital letters contain core functiona
 <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/51390468-8896-4918-a274-65c3a4b38d32" />
 
 
-## 주요 기능
+# 주요 기능
 
-### 1. 파일에 태그 할당 기능& 검색 기능.
+## 1. 파일에 태그 할당 기능& 검색 기능.
 <img width="1918" height="991" alt="Image" src="https://github.com/user-attachments/assets/5edd4881-82b4-40b1-b708-05eac960e64b" />
 <img width="1917" height="990" alt="Image" src="https://github.com/user-attachments/assets/56148337-3285-498b-8455-ca44ded54331" />
 - 한 파일에 다른 태그 중복 할당 가능.
@@ -138,13 +138,13 @@ Header files and libraries written in all capital letters contain core functiona
 - 태그명 검색 기능.
 
 
-### 2. 파일 탐색기 뷰
+## 2. 파일 탐색기 뷰
 <img width="1918" height="986" alt="Image" src="https://github.com/user-attachments/assets/5b439b72-de83-4ce2-a0be-46a4183557c2" />
 <img width="1916" height="989" alt="Image" src="https://github.com/user-attachments/assets/e5890952-7121-41aa-9bdc-ab26c81d0666" />
 - 태그를 폴더처럼 취급한 가상 경로 탐색.
 
 
-## 설치 및 빌드
+## 빌드
 
 ### 요구 사항
 - makefile:
