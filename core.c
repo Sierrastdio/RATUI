@@ -177,3 +177,124 @@ int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max
 
     return core_list_by_tags(db, tag_ptrs, tag_count, out_ids, max_ids);
 }
+
+/* ============================================================
+ *  폴더뷰(파일 탐색기 스타일 브라우징)
+ * ============================================================ */
+
+int core_list_files_in_view(archdb_t *db, const char **selected_tags, int selected_count,
+                             uint32_t *out_ids, int max_ids)
+{
+    if (selected_count <= 0) return 0; /* 정책: 태그 없는 파일은 없으므로 최상위엔 파일 없음 */
+    return core_list_by_tags(db, selected_tags, selected_count, out_ids, max_ids);
+}
+
+/* out_tags 안에서 트림된 태그 문자열로 이미 등록돼 있는 인덱스를 찾는다. 없으면 -1 */
+static int find_child_tag_index(core_child_tag_t *out_tags, int count, const char *trimmed)
+{
+    for (int i = 0; i < count; i++) {
+        if (strcmp(out_tags[i].tag, trimmed) == 0) return i;
+    }
+    return -1;
+}
+
+/* 4바이트 태그(공백 패딩)를 NUL 종료 트림 문자열로 변환 */
+static void trim_tag(char out[ARCHDB_TAG_LEN + 1], const char tag[ARCHDB_TAG_LEN])
+{
+    memcpy(out, tag, ARCHDB_TAG_LEN);
+    out[ARCHDB_TAG_LEN] = '\0';
+    for (int i = ARCHDB_TAG_LEN - 1; i >= 0 && out[i] == ' '; i--) out[i] = '\0';
+}
+
+/* selected_tags 안에 이미 있는 태그인지 확인 (정규화 비교) */
+static int tag_is_selected(const char tag[ARCHDB_TAG_LEN], const char **selected_tags, int selected_count)
+{
+    for (int i = 0; i < selected_count; i++) {
+        char norm[ARCHDB_TAG_LEN];
+        db_tag_normalize(norm, selected_tags[i]);
+        if (memcmp(tag, norm, ARCHDB_TAG_LEN) == 0) return 1;
+    }
+    return 0;
+}
+
+/* ---- 최상위(selected_count==0) 케이스: DB 전체 태그 열거 ---- */
+
+typedef struct {
+    core_child_tag_t *out;
+    int max;
+    int count;
+} all_tags_ctx_t;
+
+static int all_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+{
+    (void)file_id;
+    all_tags_ctx_t *ctx = (all_tags_ctx_t *)ctx_v;
+
+    char trimmed[ARCHDB_TAG_LEN + 1];
+    trim_tag(trimmed, tag);
+
+    int idx = find_child_tag_index(ctx->out, ctx->count, trimmed);
+    if (idx >= 0) {
+        ctx->out[idx].file_count++;
+        return 0;
+    }
+    if (ctx->count < ctx->max) {
+        strcpy(ctx->out[ctx->count].tag, trimmed);
+        ctx->out[ctx->count].file_count = 1;
+        ctx->count++;
+    }
+    return 0;
+}
+
+/* ---- 하위 레벨(selected_count>0) 케이스: 현재 결과 파일들의 나머지 태그 열거 ---- */
+
+typedef struct {
+    core_child_tag_t *out;
+    int max;
+    int count;
+    const char **exclude;
+    int exclude_count;
+} child_tags_ctx_t;
+
+static int child_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+{
+    (void)file_id;
+    child_tags_ctx_t *ctx = (child_tags_ctx_t *)ctx_v;
+
+    if (tag_is_selected(tag, ctx->exclude, ctx->exclude_count)) return 0; /* 이미 선택된 태그는 제외 */
+
+    char trimmed[ARCHDB_TAG_LEN + 1];
+    trim_tag(trimmed, tag);
+
+    int idx = find_child_tag_index(ctx->out, ctx->count, trimmed);
+    if (idx >= 0) {
+        ctx->out[idx].file_count++;
+        return 0;
+    }
+    if (ctx->count < ctx->max) {
+        strcpy(ctx->out[ctx->count].tag, trimmed);
+        ctx->out[ctx->count].file_count = 1;
+        ctx->count++;
+    }
+    return 0;
+}
+
+int core_list_child_tags(archdb_t *db, const char **selected_tags, int selected_count,
+                          core_child_tag_t *out_tags, int max_tags)
+{
+    if (selected_count <= 0) {
+        all_tags_ctx_t ctx = { out_tags, max_tags, 0 };
+        db_tag_link_foreach_all(db, all_tags_cb, &ctx);
+        return ctx.count;
+    }
+
+    /* 현재 선택된 태그를 모두 만족하는 파일들을 찾고, 그 파일들이 가진 다른 태그를 모은다 */
+    uint32_t file_ids[256];
+    int file_n = core_list_by_tags(db, selected_tags, selected_count, file_ids, 256);
+
+    child_tags_ctx_t ctx = { out_tags, max_tags, 0, selected_tags, selected_count };
+    for (int i = 0; i < file_n; i++) {
+        db_tag_foreach_by_file(db, file_ids[i], child_tags_cb, &ctx);
+    }
+    return ctx.count;
+}

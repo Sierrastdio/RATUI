@@ -85,4 +85,10 @@ void db_tag_foreach_by_file(archdb_t *db, uint32_t file_id, link_visit_cb cb, vo
 /* 특정 태그가 붙은 모든 file_id 를 순회 (태그로 검색 = 가상 경로 진입) */
 void db_tag_foreach_by_tag(archdb_t *db, const char *tag, link_visit_cb cb, void *ctx);
 
+/* file_tags.db 전체를 순회 (삭제된 슬롯 제외). 존재하는 모든 태그를 열거할 때 사용 */
+void db_tag_link_foreach_all(archdb_t *db, link_visit_cb cb, void *ctx);
+
+/* 태그 문자열을 4바이트 정규화 형태로 변환 (대문자화 + 공백 패딩). 태그 비교에 사용 */
+void db_tag_normalize(char out[ARCHDB_TAG_LEN], const char *tag);
+
 #endif /* ARCHDB_DB_H */

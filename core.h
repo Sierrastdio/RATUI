@@ -17,6 +17,7 @@
 #include "db.h"
 
 #define CORE_MAX_PATH_TAGS   16   /* "A/B/C/..." 경로 한 번에 최대 태그 개수 */
+#define CORE_MAX_CHILD_TAGS  64   /* 폴더뷰 한 화면에 보여줄 최대 하위 태그 개수 */
 
 /* ---------- 가상 경로 파싱 ---------- */
 
@@ -48,5 +49,24 @@ int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max
 /* 태그를 배열로 직접 받아 검색 - core_list_by_path와 동작은 같지만
  * "A/B" 같은 경로 문자열을 거치지 않는다 (태그를 하나씩 입력받는 UI용). */
 int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *out_ids, int max_ids);
+
+/* ---------- 폴더뷰(파일 탐색기 스타일 브라우징) ---------- */
+
+typedef struct {
+    char tag[ARCHDB_TAG_LEN + 1]; /* 트림된 태그 문자열 */
+    int  file_count;              /* 현재 선택된 태그(selected_tags)를 만족하면서 이 태그도 가진 파일 수 */
+} core_child_tag_t;
+
+/* 현재 선택된 태그(selected_tags, "폴더 경로") 기준으로, 그 조건을 만족하는 파일들이
+ * 추가로 가진 태그 목록을 "하위 폴더"처럼 반환한다. selected_tags 자신은 제외된다.
+ * selected_count == 0 이면 DB 전체에 존재하는 모든 태그를 최상위 폴더로 반환한다.
+ * out_tags 에 최대 max_tags 개까지 채우고, 실제로 채운 개수를 반환. */
+int core_list_child_tags(archdb_t *db, const char **selected_tags, int selected_count,
+                          core_child_tag_t *out_tags, int max_tags);
+
+/* 현재 선택된 태그(폴더 경로)를 모두 만족하는 파일 목록 ("현재 폴더 안의 파일들").
+ * selected_count == 0 이면 0을 반환한다 (정책상 태그 없는 파일은 없으므로 최상위엔 파일이 없음). */
+int core_list_files_in_view(archdb_t *db, const char **selected_tags, int selected_count,
+                             uint32_t *out_ids, int max_ids);
 
 #endif /* ARCHDB_CORE_H */

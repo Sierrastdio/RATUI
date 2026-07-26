@@ -14,4 +14,10 @@ int TUI_handle_register_tag(WINDOW *data_win, archdb_t *db);
  * 성공 0 / 실패(취소 포함) -1 */
 int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db);
 
+/* [3] Browse (Folder View) 핸들러
+ * 태그를 폴더처럼 취급해서 파일 탐색기 스타일로 드릴다운하며 탐색.
+ * ENTER: 하위 태그로 진입 / 파일 선택 시 상세정보 표시
+ * ESC 또는 '..' 선택: 상위 폴더로. 최상위에서 취소하면 핸들러 종료. */
+int TUI_handle_browse(WINDOW *data_win, archdb_t *db);
+
 #endif /* TUIFUNC_H */

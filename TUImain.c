@@ -15,7 +15,8 @@ void TUI_MAIN_LOOP(archdb_t *db)
     static const char *main_menu_items[] = {
         "[1]. Register Tag",
         "[2]. Search Tag",
-        "[3]. Exit"
+        "[3]. Browse (Folder View)",
+        "[4]. Exit"
     };
 
     const int main_menu_count = sizeof(main_menu_items) / sizeof(main_menu_items[0]);
@@ -64,6 +65,10 @@ void TUI_MAIN_LOOP(archdb_t *db)
                         UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Find existing Tags in files");
                         break;
                     case 2:
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[3] Browse Preview");
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Explore tags like folders");
+                        break;
+                    case 3:
                         UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Exit the application");
                         break;
                 }
@@ -82,6 +87,9 @@ void TUI_MAIN_LOOP(archdb_t *db)
                 status = TUI_handle_search_tag(right_data_win, db);
                 break;
             case 2:
+                status = TUI_handle_browse(right_data_win, db);
+                break;
+            case 3:
                 tui_cursor = 0;
                 goto cleanup;
         }

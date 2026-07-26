@@ -32,7 +32,7 @@ static int join_path(char *out, size_t out_len, const char *dir, const char *nam
 }
 
 /* 정규화된 4글자 태그로 복사 (남는 자리는 공백, 소문자는 대문자로) */
-static void normalize_tag(char out[ARCHDB_TAG_LEN], const char *tag)
+void db_tag_normalize(char out[ARCHDB_TAG_LEN], const char *tag)
 {
     memset(out, ' ', ARCHDB_TAG_LEN);
     for (int i = 0; i < ARCHDB_TAG_LEN && tag[i] != '\0'; i++) {
@@ -187,7 +187,7 @@ int db_tag_add(archdb_t *db, uint32_t file_id, const char *tag)
 {
     FILE *fp = db->file_tags_fp;
     char norm_tag[ARCHDB_TAG_LEN];
-    normalize_tag(norm_tag, tag);
+    db_tag_normalize(norm_tag, tag);
 
     size_t count = link_count(fp);
 
@@ -216,7 +216,7 @@ int db_tag_remove(archdb_t *db, uint32_t file_id, const char *tag)
 {
     FILE *fp = db->file_tags_fp;
     char norm_tag[ARCHDB_TAG_LEN];
-    normalize_tag(norm_tag, tag);
+    db_tag_normalize(norm_tag, tag);
 
     size_t count = link_count(fp);
 
@@ -256,7 +256,7 @@ void db_tag_foreach_by_tag(archdb_t *db, const char *tag, link_visit_cb cb, void
 {
     FILE *fp = db->file_tags_fp;
     char norm_tag[ARCHDB_TAG_LEN];
-    normalize_tag(norm_tag, tag);
+    db_tag_normalize(norm_tag, tag);
 
     size_t count = link_count(fp);
     if (fseek(fp, 0, SEEK_SET) != 0) return;
@@ -266,6 +266,20 @@ void db_tag_foreach_by_tag(archdb_t *db, const char *tag, link_visit_cb cb, void
         if (fread(&link, sizeof(link), 1, fp) != 1) break;
         if (link.file_id == 0) continue;
         if (memcmp(link.tag, norm_tag, ARCHDB_TAG_LEN) != 0) continue;
+        if (cb(link.file_id, link.tag, ctx) != 0) return;
+    }
+}
+
+void db_tag_link_foreach_all(archdb_t *db, link_visit_cb cb, void *ctx)
+{
+    FILE *fp = db->file_tags_fp;
+    size_t count = link_count(fp);
+    if (fseek(fp, 0, SEEK_SET) != 0) return;
+
+    for (size_t i = 0; i < count; i++) {
+        file_tag_link_t link;
+        if (fread(&link, sizeof(link), 1, fp) != 1) break;
+        if (link.file_id == 0) continue; /* 삭제된 슬롯 skip */
         if (cb(link.file_id, link.tag, ctx) != 0) return;
     }
 }
