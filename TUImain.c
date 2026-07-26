@@ -3,6 +3,7 @@
 #include "UI_PRINT.h"
 #include "SECTOR_MENU.h"
 #include "TUIfunc.h"
+#include "PATH_CONFIG.h"
 #include "core.h"
 
 #define ARCHDB_BASE_DIR "."   /* files.db / file_tags.db 가 생성될 위치 */
@@ -13,9 +14,9 @@ void TUI_MAIN_LOOP(archdb_t *db)
     static int tui_cursor = 0;
 
     static const char *main_menu_items[] = {
-        "[1]. Register Tag",
-        "[2]. Search Tag",
-        "[3]. Browse (Folder View)",
+        "[1]. Search Tag",
+        "[2]. Browse (Folder View)",
+        "[3]. Browse Filesystem",
         "[4]. Exit"
     };
 
@@ -35,9 +36,6 @@ void TUI_MAIN_LOOP(archdb_t *db)
     UI_PRINT_IDLE(right_data_win);
 
     while (1) {
-        /* NOTE: 원래 SECTOR_MENU(윈도우, ...)로 되어 있었는데, 윈도우 인자를 받는 건
-         * SECTOR_MENU_WIN 쪽이라 그걸로 바꿨어요. SECTOR_MENU(전체 화면용)는
-         * 첫 인자가 title 이라 시그니처가 다릅니다. */
         int result = SECTOR_MENU_WIN(left_menu_win, "MAIN MENU", main_menu_items,
                                       main_menu_count, &tui_cursor, max_menu_item_len);
 
@@ -51,22 +49,27 @@ void TUI_MAIN_LOOP(archdb_t *db)
             continue;
         }
 
+        if (result == SIGN_TAG_ASSIGN || result == SIGN_DELETE) {
+            /* 메인 메뉴에서는 't'/'d' 의미 없음 - 무시 */
+            continue;
+        }
+
         if (result == SIGN_KEY_CHANGED) {
             if (right_data_win) {
                 UI_CLEAR_WINDOW(right_data_win);
 
                 switch (tui_cursor) {
                     case 0:
-                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[1] Register Tag Preview");
-                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Add new Tags to files");
-                        break;
-                    case 1:
-                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[2] Search Tag Preview");
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[1] Search Tag Preview");
                         UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Find existing Tags in files");
                         break;
-                    case 2:
-                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[3] Browse Preview");
+                    case 1:
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[2] Browse Preview");
                         UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Explore tags like folders");
+                        break;
+                    case 2:
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(-1), "[3] Browse Filesystem Preview");
+                        UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Explore real files from HOME_PATH, press 't' to tag");
                         break;
                     case 3:
                         UI_PRINT_CENTERED(right_data_win, UI_GET_WIN_CENTER_Y(1), "Exit the application");
@@ -81,13 +84,13 @@ void TUI_MAIN_LOOP(archdb_t *db)
 
         switch (tui_cursor) {
             case 0:
-                status = TUI_handle_register_tag(right_data_win, db);
-                break;
-            case 1:
                 status = TUI_handle_search_tag(right_data_win, db);
                 break;
-            case 2:
+            case 1:
                 status = TUI_handle_browse(right_data_win, db);
+                break;
+            case 2:
+                status = TUI_handle_browse_fs(right_data_win, db);
                 break;
             case 3:
                 tui_cursor = 0;
@@ -108,6 +111,9 @@ void TUI_MAIN_LOOP(archdb_t *db)
 
 int main(void)
 {
+    LOAD_CONFIG();           /* config.ratui 에서 ARCHIVE_HOME_PATH 읽기 */
+    ENSURE_HOME_DIRECTORY(); /* 없으면 생성 */
+
     archdb_t db;
     if (archdb_open(&db, ARCHDB_BASE_DIR) != 0) {
         fprintf(stderr, "Error: failed to open archive DB in '%s'\n", ARCHDB_BASE_DIR);

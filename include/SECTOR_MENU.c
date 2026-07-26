@@ -2,14 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "SECTOR_MENU.h"
-#include "help_UI.h"
 #include "UI_PRINT.h"
 
-#define MAX_VISIBLE 15  /* 한번에 표시할 항목 개수 최대 15개 */
+#define MAX_VISIBLE 15
 
-/*===========================================================================
- * SECTOR_MENU — 전체 화면(stdscr) 기반 중앙 정렬 메인 메뉴
- *==========================================================================*/
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id) {
     int start_index = 0;
     int key;
@@ -25,7 +21,6 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     while (1) {
         clear();
 
-        // snprintf를 사용해 불필요한 do-while 나눗셈 루프 없이 타이틀 정렬 길이 계산
         int title_len = snprintf(NULL, 0, " === %s (Total: %d) === ", title, count);
 
         UI_GET_CENTER_X(title_len);
@@ -56,13 +51,6 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
         refresh();
 
         key = getch();
-
-        if (key == '?') {
-            SHOW_HELP(sector_id);
-            clear();
-            refresh();
-            continue;
-        }
 
         switch (key) {
             case KEY_UP:
@@ -104,20 +92,16 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
     }
 }
 
-/*===========================================================================
- * SECTOR_MENU_WIN — 윈도우(WINDOW*) 전용 서브 메뉴
- *==========================================================================*/
 int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int count, int *cursor, int max_len) {
     int win_width = getmaxx(win);
     int win_height = getmaxy(win);
 
     int menu_start_x;
     int start_y;
-    int max_draw_count = win_height - 5; // 박스 경계선 및 타이틀/안내선 출력 공간 제외
+    int max_draw_count = win_height - 5;
 
     if (max_draw_count < 1) max_draw_count = 1;
 
-    // 스크롤 시작 위치 인덱스 계산
     int start_index = 0;
     if (*cursor >= max_draw_count) {
         start_index = *cursor - (max_draw_count - 1);
@@ -144,7 +128,6 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
     mvwprintw(win, 1, title_x, "%s", title);
     wattroff(win, A_REVERSE);
 
-    // 안전 스크롤 루프 출력
     for (int i = 0; i < max_draw_count && (start_index + i) < count; i++) {
         int idx = start_index + i;
         int print_y = start_y + i;
@@ -202,6 +185,10 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
         case 'd':
         case 'D':
             return SIGN_DELETE;
+
+        case 't':
+        case 'T':
+            return SIGN_TAG_ASSIGN;
 
         case 'r':
         case 'R':

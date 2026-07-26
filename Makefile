@@ -53,7 +53,7 @@ all: $(TARGET_TUI)
 $(TARGET_TUI): $(LIB_OBJS) $(TUIFUNC_OBJ) $(TUIMAIN_OBJ) $(TARGET_DB_LIB)
 	$(CC) $(CFLAGS) $(LIB_OBJS) $(TUIFUNC_OBJ) $(TUIMAIN_OBJ) $(TARGET_DB_LIB) -o $@ $(LIBS) $(LDFLAGS) -s
 	@echo "=========================================="
-	@echo " 배포용 바이너리 생성 완료: $(TARGET_TUI)"
+	@echo " 바이너리 생성 완료: $(TARGET_TUI)"
 	@size $(TARGET_TUI) | tee build_size.log
 	@echo "=========================================="
 

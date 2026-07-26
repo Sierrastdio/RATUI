@@ -18,14 +18,11 @@
     } \
 } while (0)
 
-// 전역 경로 포인터 선언 (char[512] 배열 -> const char * 포인터 변경)
-extern const char *INGEST_PATH;
-extern const char *ROS_PATH;
-extern const char *EDS_PATH;
-extern const char *BKS_PATH;
-extern const char *TRS_PATH;
+/* 섹터(INS/ROS/EDS/BKS/TRS) 개념을 안 쓰기로 해서, 절대경로 파일 탐색기의
+ * 시작점("홈" 경로) 하나만 관리한다. config.ratui 의 HOME_PATH= 줄에서 읽어온다. */
+extern const char *ARCHIVE_HOME_PATH;
 
-void LOAD_CONFIG();
-void ENSURE_DIRECTORIES();
+void LOAD_CONFIG(void);
+void ENSURE_HOME_DIRECTORY(void);
 
 #endif
