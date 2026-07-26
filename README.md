@@ -118,22 +118,18 @@ Header files and libraries written in all capital letters contain core functiona
 
 이 프로젝트는 C 언어로 작성되었으며, ncurses 라이브러리를 사용하여 터미널 기반 인터페이스를 구현합니다.
 
+## 시스템 구조.
+프로젝트는 다음과 같이 구성되어 있습니다:
+<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/51390468-8896-4918-a274-65c3a4b38d32" />
+
+
 ## 주요 기능
 
-### 0. 모듈별 기능
-프로젝트는 여러 모듈로 구성되어 있습니다:
-- ``HOMEmain``: 메인 홈 인터페이스
-- ``ROS (ReadOnly)``: 메인 저장소
-- ``INS (Insert)``: 파일들을 메인 저장소에 옮기기전 임시 공간
-- ``EDS (Edit)``: 파일 편집 기능
-- ``BKS (Backup)``: 백업 관련 기능
-- ``TRS (Trash)``: 삭제, 폐기 예정인 파일들
+### 1. 파일에 태그 할당 기능.
+- 태그 중복 할당 가능.
+- 태그명은 영어만.
 
-### 1. 파일 탐색기 시스템
-- 컴팩트하고 직관적인 파일 탐색 기능
-- 효율적인 파일 시스템 관리
-
-### 2. 파일 관리 시스템
+### 2. 파일 탐색기 뷰
 - 자체 제작 편의 기능: 파일 복사, 이동, 삭제 등의 기본 작업
 
 ### 3. 중복 파일 관리
