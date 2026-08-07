@@ -1,14 +1,8 @@
 # 빌드 결과물
 bin/
-make_rti
 *.o
 *.db
-
-reader
-
-writer
-
-tui
+ratui
 
 libarchdb.a
 

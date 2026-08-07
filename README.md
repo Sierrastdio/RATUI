@@ -123,7 +123,7 @@ make
 ### 실행 방법
 ```fish
 # Makefile 로 빌드 했다면:
-./tui
+./ratui
 ```
 
 ### 청소
