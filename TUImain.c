@@ -50,8 +50,8 @@ void TUI_MAIN_LOOP(archdb_t *db)
             continue;
         }
 
-        if (result == SIGN_TAG_ASSIGN || result == SIGN_DELETE) {
-            /* 메인 메뉴에서는 't'/'d' 의미 없음 - 무시 */
+        if (result == SIGN_TAG_ASSIGN || result == SIGN_DELETE || result == SIGN_UNREGISTER) {
+            /* 메인 메뉴에서는 't'/'d'/'x' 의미 없음 - 무시 */
             continue;
         }
 

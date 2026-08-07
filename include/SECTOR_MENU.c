@@ -7,6 +7,7 @@
 #define MAX_VISIBLE 15
 
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id) {
+    (void)sector_id; /* 지금은 섹터별 도움말을 안 써서 미사용 - 경고 방지용 */
     int start_index = 0;
     int key;
 
@@ -54,11 +55,15 @@ int SECTOR_MENU(const char *title, const char *options[], int count, int *curren
 
         switch (key) {
             case KEY_UP:
+            case 'k':
+            case 'K':
                 if (*current_cursor > 0) (*current_cursor)--;
                 else *current_cursor = count - 1;
                 break;
 
             case KEY_DOWN:
+            case 'j':
+            case 'J':
                 if (*current_cursor < count - 1) (*current_cursor)++;
                 else *current_cursor = 0;
                 break;
@@ -157,6 +162,8 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
         case KEY_UP:
         case 'w':
         case 'W':
+        case 'k':
+        case 'K':
             if (*cursor > 0) (*cursor)--;
             else *cursor = count - 1;
             return SIGN_KEY_CHANGED;
@@ -164,6 +171,8 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
         case KEY_DOWN:
         case 's':
         case 'S':
+        case 'j':
+        case 'J':
             if (*cursor < count - 1) (*cursor)++;
             else *cursor = 0;
             return SIGN_KEY_CHANGED;
@@ -189,6 +198,10 @@ int SECTOR_MENU_WIN(WINDOW *win, const char *title, const char *items[], int cou
         case 't':
         case 'T':
             return SIGN_TAG_ASSIGN;
+
+        case 'x':
+        case 'X':
+            return SIGN_UNREGISTER;
 
         case 'r':
         case 'R':

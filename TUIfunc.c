@@ -113,6 +113,104 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *file_na
     return (new_id != ARCHDB_INVALID_ID) ? 0 : -1;
 }
 
+/* 파일에 걸린 태그를 트림된 문자열로 모으는 콜백 (TUI_do_untag_file 전용) */
+typedef struct {
+    char tags[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
+    int  count;
+} untag_collect_ctx_t;
+
+static int untag_collect_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+{
+    (void)file_id;
+    untag_collect_ctx_t *ctx = (untag_collect_ctx_t *)ctx_v;
+
+    if (ctx->count >= CORE_MAX_PATH_TAGS) return 0;
+
+    char trimmed[ARCHDB_TAG_LEN + 1];
+    memcpy(trimmed, tag, ARCHDB_TAG_LEN);
+    trimmed[ARCHDB_TAG_LEN] = '\0';
+    for (int i = ARCHDB_TAG_LEN - 1; i >= 0 && trimmed[i] == ' '; i--) trimmed[i] = '\0';
+
+    memcpy(ctx->tags[ctx->count], trimmed, sizeof(trimmed));
+    ctx->count++;
+    return 0;
+}
+
+/* 파일에 걸린 태그 중 하나를 골라서 떼어낸다 (파일 자체는 삭제 안 함).
+ * 태그 목록을 SECTOR_MENU_WIN으로 보여주고 하나 고르면 core_untag_file 호출. */
+static void TUI_do_untag_file(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
+{
+    untag_collect_ctx_t ctx = { .count = 0 };
+    db_tag_foreach_by_file(db, file_id, untag_collect_cb, &ctx);
+
+    if (ctx.count == 0) {
+        status_msg(data_win, "ERROR: no tags found for this file.");
+        return;
+    }
+
+    const char *tag_ptrs[CORE_MAX_PATH_TAGS];
+    for (int i = 0; i < ctx.count; i++) tag_ptrs[i] = ctx.tags[i];
+
+    int cursor = 0;
+    char title[160];
+    snprintf(title, sizeof(title), "REMOVE TAG - %.100s", file_name);
+
+    while (1) {
+        int result = SECTOR_MENU_WIN(data_win, title, tag_ptrs, ctx.count, &cursor, SIGN_LEFT_ALIGN);
+
+        if (result == SIGN_KEY_CHANGED || result == SIGN_REFRESH) {
+            continue; /* 방향키로 커서만 움직인 경우 - 같은 목록 다시 그림 */
+        }
+
+        if (result == SIGN_CANCEL) {
+            return; /* q/ESC - 아무 것도 안 하고 나가기 */
+        }
+
+        if (result == SIGN_DELETE || result == SIGN_TAG_ASSIGN || result == SIGN_UNREGISTER) {
+            continue; /* 여기선 의미 없는 키 - 무시하고 계속 대기 */
+        }
+
+        if (result < 0 || result >= ctx.count) return;
+
+        int rc = core_untag_file(db, file_id, ctx.tags[result]);
+        char msg[200];
+        if (rc == 0) {
+            snprintf(msg, sizeof(msg), "REMOVED: tag '%s' from '%.100s'", ctx.tags[result], file_name);
+        } else {
+            snprintf(msg, sizeof(msg), "ERROR: cannot remove last remaining tag from '%.100s'.", file_name);
+        }
+        status_msg(data_win, msg);
+        return;
+    }
+}
+
+/* 파일을 완전히 삭제한다 (태그 전부 해제 + 파일 레코드 자체 삭제).
+ * 되돌릴 수 없는 동작이라 y/n 확인을 받는다. */
+static void TUI_do_unregister_file(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
+{
+    char prompt[220];
+    snprintf(prompt, sizeof(prompt), "Delete '%.100s' from archive? This cannot be undone. (y/n)", file_name);
+
+    UI_CLEAR_WINDOW(data_win);
+    mvwprintw(data_win, 2, 2, "%s", prompt);
+    wrefresh(data_win);
+
+    int ch = wgetch(data_win);
+    if (ch != 'y' && ch != 'Y') {
+        status_msg(data_win, "CANCELLED.");
+        return;
+    }
+
+    int rc = core_delete_file(db, file_id);
+    char msg[220];
+    if (rc == 0) {
+        snprintf(msg, sizeof(msg), "DELETED: '%.100s' removed from archive (tags + record).", file_name);
+    } else {
+        snprintf(msg, sizeof(msg), "ERROR: failed to delete '%.100s'.", file_name);
+    }
+    status_msg(data_win, msg);
+}
+
 /* ---------- [1] Search Tag ---------- */
 
 int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db)
@@ -283,7 +381,29 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
         }
 
         if (result == SIGN_TAG_ASSIGN) {
-            continue; /* 태그 폴더뷰에서는 't' 동작 없음 (파일 등록은 Browse Filesystem에서) */
+            /* 't' 키: 커서가 파일을 가리키고 있으면 그 파일의 태그 중 하나를 골라 제거 */
+            int sel = cursor;
+            if (sel >= file_start && sel < file_start + file_n) {
+                int fi = sel - file_start;
+                file_record_t rec;
+                if (db_file_read(db, file_ids[fi], &rec) == 0) {
+                    TUI_do_untag_file(data_win, db, file_ids[fi], rec.file_name);
+                }
+            }
+            continue;
+        }
+
+        if (result == SIGN_UNREGISTER) {
+            /* 'x' 키: 커서가 파일을 가리키고 있으면 완전 삭제(태그 전부 + 파일 레코드) */
+            int sel = cursor;
+            if (sel >= file_start && sel < file_start + file_n) {
+                int fi = sel - file_start;
+                file_record_t rec;
+                if (db_file_read(db, file_ids[fi], &rec) == 0) {
+                    TUI_do_unregister_file(data_win, db, file_ids[fi], rec.file_name);
+                }
+            }
+            continue;
         }
 
         /* ENTER로 아이템 선택 */
@@ -338,7 +458,7 @@ static void fs_on_file_selected(WINDOW *data_win, archdb_t *db, const char *full
     (void)db; /* 태그 기능 붙이면 여기서 core_register_file 등에 사용 */
 
     char msg[1600];
-    snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [tag 기능은 추후 지원]", file_name, full_path);
+    snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [엔터키 기능은 추후 지원]", file_name, full_path);
     status_msg(data_win, msg);
 }
 
@@ -414,6 +534,8 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
         if (result == SIGN_CANCEL) break; /* 파일탐색기 종료 -> 메인 메뉴 */
 
         if (result == SIGN_DELETE) continue; /* 삭제는 아직 미구현 */
+
+        if (result == SIGN_UNREGISTER) continue; /* 파일탐색기에서는 'x' 동작 없음 (등록 해제는 태그 폴더뷰에서) */
 
         if (result == SIGN_TAG_ASSIGN) {
             /* 't' 키: 현재 커서가 가리키는 항목이 파일이면 태그 할당 창 호출 */

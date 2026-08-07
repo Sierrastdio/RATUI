@@ -17,6 +17,7 @@
 #define SIGN_KEY_CHANGED -4 // 윈도우 내 실시간 커서 변경 제어용 신호
 #define SIGN_LEFT_ALIGN  -5 // 데이터 윈도우 파일 리스트 좌측 정렬 지표
 #define SIGN_TAG_ASSIGN  -6 // 't' 키 - 선택 항목에 태그 할당 요청
+#define SIGN_UNREGISTER  -7 // 'x' 키 - 선택 항목을 완전히 삭제(등록 해제) 요청
 // 메인 화면 전체 전용 메뉴 렌더러
 int SECTOR_MENU(const char *title, const char *options[], int count, int *current_cursor, int sector_id);
 // 분할 윈도우(WINDOW*) 전용 서브 메뉴 렌더러

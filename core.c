@@ -298,3 +298,94 @@ int core_list_child_tags(archdb_t *db, const char **selected_tags, int selected_
     }
     return ctx.count;
 }
+
+/* ============================================================
+ *  등록 해제
+ * ============================================================ */
+
+typedef struct {
+    char tags[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
+    int  count;
+} all_file_tags_ctx_t;
+
+static int collect_all_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+{
+    (void)file_id;
+    all_file_tags_ctx_t *ctx = (all_file_tags_ctx_t *)ctx_v;
+    if (ctx->count < CORE_MAX_PATH_TAGS) {
+        trim_tag(ctx->tags[ctx->count], tag);
+        ctx->count++;
+    }
+    return 0;
+}
+
+int core_delete_file(archdb_t *db, uint32_t file_id)
+{
+    if (db == NULL || file_id == ARCHDB_INVALID_ID) return -1;
+
+    all_file_tags_ctx_t all_tags = { .count = 0 };
+    db_tag_foreach_by_file(db, file_id, collect_all_tags_cb, &all_tags);
+
+    for (int i = 0; i < all_tags.count; i++) {
+        db_tag_remove(db, file_id, all_tags.tags[i]);
+    }
+
+    return db_file_delete(db, file_id);
+}
+
+uint32_t core_unregister_file(archdb_t *db, const char *file_name, uint16_t version,
+                               const char **tags, int tag_count)
+{
+    if (file_name == NULL || file_name[0] == '\0') return 0;
+    if (tag_count < 1) return 0; /* 후보를 좁히려면 태그가 최소 1개 필요 */
+
+    /* 주어진 태그를 모두 가진 파일들 중에서 이름+버전이 일치하는 것만 후보로 좁힌다 */
+    uint32_t candidates[64];
+    int n = core_list_by_tags(db, tags, tag_count, candidates, 64);
+
+    uint32_t target = ARCHDB_INVALID_ID;
+    int match_count = 0;
+
+    for (int i = 0; i < n; i++) {
+        file_record_t rec;
+        if (db_file_read(db, candidates[i], &rec) != 0) continue;
+        if (strcmp(rec.file_name, file_name) == 0 && rec.version == version) {
+            target = candidates[i];
+            match_count++;
+        }
+    }
+
+    /* 정확히 1개로 특정되지 않으면(못 찾았거나, 조건이 겹쳐서 여러 개 걸리면) 안전하게 취소 */
+    if (match_count != 1) return 0;
+
+    if (core_delete_file(db, target) != 0) return 0;
+
+    return target;
+}
+
+/* ============================================================
+ *  태그 하나만 떼어내기 (파일은 유지)
+ * ============================================================ */
+
+typedef struct { int count; } count_tags_ctx_t;
+
+static int count_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+{
+    (void)file_id;
+    (void)tag;
+    count_tags_ctx_t *ctx = (count_tags_ctx_t *)ctx_v;
+    ctx->count++;
+    return 0;
+}
+
+int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag)
+{
+    if (db == NULL || file_id == ARCHDB_INVALID_ID || tag == NULL) return -1;
+
+    count_tags_ctx_t cnt = { 0 };
+    db_tag_foreach_by_file(db, file_id, count_tags_cb, &cnt);
+
+    if (cnt.count <= 1) return -1; /* 마지막 남은 태그 - 정책상 거부 */
+
+    return db_tag_remove(db, file_id, tag);
+}

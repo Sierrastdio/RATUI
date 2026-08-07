@@ -37,6 +37,28 @@ int core_file_path(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len);
 uint32_t core_register_file(archdb_t *db, const char *file_name, uint16_t version,
                              const char **tags, int tag_count);
 
+/* 등록 해제: file_name + version + tags 로 파일을 정확히 하나로 특정한 뒤,
+ * 그 파일에 걸린 모든 태그 매핑을 제거하고 파일 레코드 자체도 삭제한다.
+ * (같은 이름의 파일이 여러 개 있을 수 있는 정책이라, 조건에 맞는 파일이
+ *  0개이거나 2개 이상이면 안전하게 아무 것도 안 하고 0을 반환한다.)
+ * tag_count 는 1 이상이어야 한다 (최소 1개는 있어야 후보를 좁힐 수 있음).
+ * 성공 시 삭제된 file_id 반환, 실패 시 0. */
+uint32_t core_unregister_file(archdb_t *db, const char *file_name, uint16_t version,
+                               const char **tags, int tag_count);
+
+/* 파일은 그대로 두고 태그 하나만 떼어낸다 (파일 삭제 아님).
+ * 정책: 그 태그가 파일에 남은 마지막 하나뿐이면 거부한다(-1) - 태그 없는 파일은
+ * 안 되므로, 마지막 태그를 지우고 싶으면 core_unregister_file로 파일째 삭제해야 함.
+ * 성공 0 / 실패(대상 없음, 마지막 태그, file_id 무효 등) -1 */
+int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag);
+
+/* file_id를 이미 알고 있을 때 그 파일을 완전히 삭제한다
+ * (걸린 태그 전부 해제 + 파일 레코드 자체도 삭제).
+ * core_unregister_file은 이름/버전/태그로 파일을 "찾아야" 할 때 쓰고,
+ * file_id를 이미 알고 있으면(예: 목록에서 직접 선택) 이걸 바로 쓰면 된다.
+ * 성공 0 / 실패 -1 */
+int core_delete_file(archdb_t *db, uint32_t file_id);
+
 /* ---------- 조회 ---------- */
 
 /* file_id 가 tag 를 가지고 있는지 확인 */
