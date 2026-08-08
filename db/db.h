@@ -29,6 +29,7 @@ typedef struct {
     uint32_t file_id;                  /* 1부터 시작. 0이면 빈(삭제된) 슬롯 */
     char     file_name[ARCHDB_NAME_LEN];
     uint16_t version;
+    uint64_t content_hash;             /* 파일 내용 앞4KB+뒤4KB+크기 기반 지문. 0=계산 안 됨 */
 } file_record_t;
 
 /* file_tags.db 레코드. (file_id, tag) 매핑 - 파일 하나에 태그 여러 개 가능 */
@@ -55,13 +56,13 @@ void archdb_close(archdb_t *db);
 /* ---------- files.db ---------- */
 
 /* 새 파일 레코드를 append 하고 부여된 file_id 를 반환한다. 실패 시 0 */
-uint32_t db_file_append(archdb_t *db, const char *file_name, uint16_t version);
+uint32_t db_file_append(archdb_t *db, const char *file_name, uint16_t version, uint64_t content_hash);
 
 /* file_id 로 레코드를 읽는다. 성공 0 / 없음·실패 -1 */
 int db_file_read(archdb_t *db, uint32_t file_id, file_record_t *out);
 
-/* 파일명/버전을 갱신한다 (버전업 등). 성공 0 / 실패 -1 */
-int db_file_update(archdb_t *db, uint32_t file_id, const char *file_name, uint16_t version);
+/* 파일명/버전/내용해시를 갱신한다 (버전업 등). 성공 0 / 실패 -1 */
+int db_file_update(archdb_t *db, uint32_t file_id, const char *file_name, uint16_t version, uint64_t content_hash);
 
 /* file_id 슬롯을 논리 삭제한다. 성공 0 / 실패 -1 */
 int db_file_delete(archdb_t *db, uint32_t file_id);

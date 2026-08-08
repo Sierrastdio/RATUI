@@ -54,7 +54,7 @@ static int prompt_line(WINDOW *win, int y, int x, const char *label, char *out, 
  * Browse Filesystem 에서 파일을 고르고 't'를 눌렀을 때 호출된다.
  * 파일명은 파라미터로 받으므로 여기서 따로 입력받지 않는다. */
 
-static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *file_name)
+static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
 {
     if (data_win == NULL || db == NULL || file_name == NULL) return -1;
 
@@ -84,6 +84,27 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *file_na
         int len = prompt_line(data_win, 7 + tag_count, 2, label, one_tag, sizeof(one_tag));
         if (len <= 0) break; /* 빈 입력 -> 태그 추가 종료 */
 
+        /* 이미 입력한 태그와 중복인지 확인 (대소문자 무시하고 정규화해서 비교) */
+        char norm_new[ARCHDB_TAG_LEN];
+        db_tag_normalize(norm_new, one_tag);
+
+        int is_dup = 0;
+        for (int i = 0; i < tag_count; i++) {
+            char norm_existing[ARCHDB_TAG_LEN];
+            db_tag_normalize(norm_existing, tags_buf[i]);
+            if (memcmp(norm_new, norm_existing, ARCHDB_TAG_LEN) == 0) {
+                is_dup = 1;
+                break;
+            }
+        }
+
+        if (is_dup) {
+            mvwprintw(data_win, 7 + tag_count, 2 + (int)strlen(label) + ARCHDB_TAG_LEN + 2,
+                      "-> 이미 입력한 태그입니다, 다시 입력하세요");
+            wrefresh(data_win);
+            continue; /* 같은 칸(tag_count 그대로)에서 다시 입력받기 */
+        }
+
         memcpy(tags_buf[tag_count], one_tag, sizeof(one_tag));
         tag_ptrs[tag_count] = tags_buf[tag_count];
         tag_count++;
@@ -94,7 +115,28 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *file_na
         return -1;
     }
 
-    uint32_t new_id = core_register_file(db, file_name, version, tag_ptrs, tag_count);
+    /* 실제 파일 내용을 해시해서, 이름 또는 내용이 겹치는 기존 등록이 있는지 확인 */
+    uint64_t content_hash = core_hash_file(full_path);
+    core_dup_result_t dup = core_check_duplicate_content(db, content_hash, file_name);
+
+    if (dup.kind == CORE_DUP_SAME_NAME_SAME_CONTENT) {
+        char dup_msg[300];
+        snprintf(dup_msg, sizeof(dup_msg),
+                 "CANCELLED: identical file '%.100s' (same name & content) already registered (id=%u).",
+                 file_name, dup.existing_file_id);
+        status_msg(data_win, dup_msg);
+        return -1;
+    }
+    if (dup.kind == CORE_DUP_DIFF_NAME_SAME_CONTENT) {
+        char dup_msg[300];
+        snprintf(dup_msg, sizeof(dup_msg),
+                 "CANCELLED: this exact content is already registered under a different name (id=%u).",
+                 dup.existing_file_id);
+        status_msg(data_win, dup_msg);
+        return -1;
+    }
+
+    uint32_t new_id = core_register_file(db, file_name, version, content_hash, tag_ptrs, tag_count);
 
     char result_msg[512];
     if (new_id != ARCHDB_INVALID_ID) {
@@ -458,7 +500,7 @@ static void fs_on_file_selected(WINDOW *data_win, archdb_t *db, const char *full
     (void)db; /* 태그 기능 붙이면 여기서 core_register_file 등에 사용 */
 
     char msg[1600];
-    snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [엔터키 기능은 추후 지원]", file_name, full_path);
+    snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [tag 기능은 추후 지원]", file_name, full_path);
     status_msg(data_win, msg);
 }
 
@@ -541,7 +583,9 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
             /* 't' 키: 현재 커서가 가리키는 항목이 파일이면 태그 할당 창 호출 */
             int sel = cursor;
             if (sel >= 0 && sel < count && !is_dir[sel] && strcmp(names[sel], "..") != 0) {
-                TUI_do_tag_assign(data_win, db, names[sel]);
+                char full[FS_PATH_MAX + 256];
+                snprintf(full, sizeof(full), "%s/%s", current_path, names[sel]);
+                TUI_do_tag_assign(data_win, db, full, names[sel]);
             }
             continue;
         }

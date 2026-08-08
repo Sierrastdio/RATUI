@@ -105,7 +105,7 @@ void archdb_close(archdb_t *db)
  *  files.db
  * ============================================================ */
 
-uint32_t db_file_append(archdb_t *db, const char *file_name, uint16_t version)
+uint32_t db_file_append(archdb_t *db, const char *file_name, uint16_t version, uint64_t content_hash)
 {
     FILE *fp = db->files_fp;
     size_t count = file_count(fp);
@@ -116,6 +116,7 @@ uint32_t db_file_append(archdb_t *db, const char *file_name, uint16_t version)
     rec.file_id = new_id;
     strncpy(rec.file_name, file_name, ARCHDB_NAME_LEN - 1);
     rec.version = version;
+    rec.content_hash = content_hash;
 
     if (fseek(fp, file_offset(new_id), SEEK_SET) != 0) return 0;
     if (fwrite(&rec, sizeof(rec), 1, fp) != 1) return 0;
@@ -135,7 +136,7 @@ int db_file_read(archdb_t *db, uint32_t file_id, file_record_t *out)
     return 0;
 }
 
-int db_file_update(archdb_t *db, uint32_t file_id, const char *file_name, uint16_t version)
+int db_file_update(archdb_t *db, uint32_t file_id, const char *file_name, uint16_t version, uint64_t content_hash)
 {
     file_record_t rec;
     if (db_file_read(db, file_id, &rec) != 0) return -1;
@@ -143,6 +144,7 @@ int db_file_update(archdb_t *db, uint32_t file_id, const char *file_name, uint16
     memset(rec.file_name, 0, ARCHDB_NAME_LEN);
     strncpy(rec.file_name, file_name, ARCHDB_NAME_LEN - 1);
     rec.version = version;
+    rec.content_hash = content_hash;
 
     FILE *fp = db->files_fp;
     if (fseek(fp, file_offset(file_id), SEEK_SET) != 0) return -1;

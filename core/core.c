@@ -7,6 +7,7 @@
 #include "core.h"
 
 #include <string.h>
+#include <stdio.h>
 
 /* ============================================================
  *  경로 파싱
@@ -86,12 +87,12 @@ int core_file_path(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len)
  * ============================================================ */
 
 uint32_t core_register_file(archdb_t *db, const char *file_name, uint16_t version,
-                             const char **tags, int tag_count)
+                             uint64_t content_hash, const char **tags, int tag_count)
 {
     if (file_name == NULL || file_name[0] == '\0') return 0;
     if (tag_count < 1) return 0; /* 정책: 태그 없는 등록 금지 */
 
-    uint32_t id = db_file_append(db, file_name, version);
+    uint32_t id = db_file_append(db, file_name, version, content_hash);
     if (id == ARCHDB_INVALID_ID) return 0;
 
     for (int i = 0; i < tag_count; i++) {
@@ -388,4 +389,91 @@ int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag)
     if (cnt.count <= 1) return -1; /* 마지막 남은 태그 - 정책상 거부 */
 
     return db_tag_remove(db, file_id, tag);
+}
+
+/* ============================================================
+ *  내용 기반 중복 검사
+ * ============================================================ */
+
+uint64_t core_hash_file(const char *full_path)
+{
+    if (full_path == NULL) return 0;
+
+    FILE *fp = fopen(full_path, "rb");
+    if (fp == NULL) return 0;
+
+    if (fseek(fp, 0, SEEK_END) != 0) { fclose(fp); return 0; }
+    long size = ftell(fp);
+    if (size < 0) { fclose(fp); return 0; }
+
+    /* FNV-1a 64비트 해시 */
+    uint64_t hash = 14695981039346656037ULL;
+    const uint64_t prime = 1099511628211ULL;
+    unsigned char buf[4096];
+
+    /* 앞 4KB */
+    if (fseek(fp, 0, SEEK_SET) == 0) {
+        size_t to_read = (size < (long)sizeof(buf)) ? (size_t)size : sizeof(buf);
+        size_t got = fread(buf, 1, to_read, fp);
+        for (size_t i = 0; i < got; i++) { hash ^= buf[i]; hash *= prime; }
+    }
+
+    /* 뒤 4KB (파일이 8KB보다 커서 앞부분과 안 겹칠 때만) */
+    if (size > (long)(sizeof(buf) * 2)) {
+        long tail_off = size - (long)sizeof(buf);
+        if (fseek(fp, tail_off, SEEK_SET) == 0) {
+            size_t got = fread(buf, 1, sizeof(buf), fp);
+            for (size_t i = 0; i < got; i++) { hash ^= buf[i]; hash *= prime; }
+        }
+    }
+
+    /* 파일 크기도 섞어서, 앞/뒤 4KB가 우연히 같아도 크기가 다르면 다른 해시가 되게 */
+    unsigned char size_bytes[sizeof(long)];
+    memcpy(size_bytes, &size, sizeof(size));
+    for (size_t i = 0; i < sizeof(size_bytes); i++) { hash ^= size_bytes[i]; hash *= prime; }
+
+    fclose(fp);
+
+    return (hash == 0) ? 1 : hash; /* 0은 "계산 안 됨" sentinel이라 실제 결과가 0이면 1로 치환 */
+}
+
+typedef struct {
+    const char *file_name;
+    uint64_t hash;
+    core_dup_result_t result;
+} dup_check_ctx_t;
+
+static int dup_check_cb(const file_record_t *rec, void *ctx_v)
+{
+    dup_check_ctx_t *ctx = (dup_check_ctx_t *)ctx_v;
+
+    int same_name = (strcmp(rec->file_name, ctx->file_name) == 0);
+    int same_content = (rec->content_hash != 0 && rec->content_hash == ctx->hash);
+
+    if (same_name && same_content) {
+        ctx->result.kind = CORE_DUP_SAME_NAME_SAME_CONTENT;
+        ctx->result.existing_file_id = rec->file_id;
+        return 1; /* 가장 강한 매치 - 바로 순회 중단 */
+    }
+
+    if (!same_name && same_content && ctx->result.kind == CORE_DUP_NONE) {
+        /* 더 약한 매치라 계속 찾아보되(더 강한 매치가 있으면 그걸 우선하려고),
+         * 아직 아무 것도 못 찾았으면 일단 기록해둔다 */
+        ctx->result.kind = CORE_DUP_DIFF_NAME_SAME_CONTENT;
+        ctx->result.existing_file_id = rec->file_id;
+    }
+
+    /* same_name && !same_content -> 이름은 같은데 내용이 다름: 통과 대상, 아무 것도 안 함 */
+    return 0;
+}
+
+core_dup_result_t core_check_duplicate_content(archdb_t *db, uint64_t content_hash, const char *file_name)
+{
+    core_dup_result_t result = { CORE_DUP_NONE, ARCHDB_INVALID_ID };
+    if (content_hash == 0 || file_name == NULL) return result; /* 해시 계산 실패 - 검사 스킵 */
+
+    dup_check_ctx_t ctx = { file_name, content_hash, result };
+    db_file_foreach(db, dup_check_cb, &ctx);
+
+    return ctx.result;
 }

@@ -31,11 +31,13 @@ int core_file_path(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len);
 /* ---------- 등록 ---------- */
 
 /* 파일 등록 + 태그 일괄 부여.
+ * content_hash 는 core_hash_file()로 미리 계산해서 넘긴다 (모르면 0을 넘겨도 되지만,
+ * 그러면 이 레코드는 이후 내용 기반 중복검사에서 항상 "다른 파일"로 취급된다).
  * tag_count 는 1 이상이어야 한다 (정책: 태그 없는 등록 금지). 위반 시 0 반환.
  * 태그 등록 중 하나라도 실패하면 파일 레코드도 롤백(논리 삭제)하고 0 반환.
  * 성공 시 새로 부여된 file_id 반환. */
 uint32_t core_register_file(archdb_t *db, const char *file_name, uint16_t version,
-                             const char **tags, int tag_count);
+                             uint64_t content_hash, const char **tags, int tag_count);
 
 /* 등록 해제: file_name + version + tags 로 파일을 정확히 하나로 특정한 뒤,
  * 그 파일에 걸린 모든 태그 매핑을 제거하고 파일 레코드 자체도 삭제한다.
@@ -58,6 +60,27 @@ int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag);
  * file_id를 이미 알고 있으면(예: 목록에서 직접 선택) 이걸 바로 쓰면 된다.
  * 성공 0 / 실패 -1 */
 int core_delete_file(archdb_t *db, uint32_t file_id);
+
+/* 실제 파일(full_path)의 앞 4KB + 뒤 4KB + 파일 크기를 섞어서 지문 해시를 계산한다.
+ * 파일을 열 수 없으면 0을 반환한다 (0은 "계산 안 됨"을 뜻하는 sentinel). */
+uint64_t core_hash_file(const char *full_path);
+
+typedef enum {
+    CORE_DUP_NONE = 0,                /* 중복 아님 - 새로 등록해도 됨 */
+    CORE_DUP_SAME_NAME_SAME_CONTENT,  /* 이름도 내용도 같음 - 완전 중복 */
+    CORE_DUP_DIFF_NAME_SAME_CONTENT,  /* 이름은 다른데 내용이 같음 (같은 파일을 다른 이름으로) */
+} core_dup_kind_t;
+
+typedef struct {
+    core_dup_kind_t kind;
+    uint32_t existing_file_id; /* kind != CORE_DUP_NONE 일 때만 유효 */
+} core_dup_result_t;
+
+/* content_hash(= core_hash_file 결과)와 file_name으로, 이미 등록된 파일 중
+ * 이름 또는 내용이 겹치는 게 있는지 확인한다. 이름은 같은데 내용이 다른 경우는
+ * (버전이 바뀐 파일 등) 중복으로 안 치고 CORE_DUP_NONE을 반환한다.
+ * content_hash가 0(계산 실패)이면 검사를 건너뛰고 항상 CORE_DUP_NONE. */
+core_dup_result_t core_check_duplicate_content(archdb_t *db, uint64_t content_hash, const char *file_name);
 
 /* ---------- 조회 ---------- */
 
