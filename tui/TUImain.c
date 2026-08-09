@@ -85,13 +85,13 @@ void TUI_MAIN_LOOP(archdb_t *db)
 
         switch (tui_cursor) {
             case 0:
-                status = TUI_handle_search_tag(right_data_win, db);
+                status = TUI_SEARCH_TAG(right_data_win, db);
                 break;
             case 1:
-                status = TUI_handle_browse(right_data_win, db);
+                status = TUI_BROWSE_TAG_FOLDER_VIEW(right_data_win, db);
                 break;
             case 2:
-                status = TUI_handle_browse_fs(right_data_win, db);
+                status = TUI_BROWSE_FS(right_data_win, db);
                 break;
             case 3:
                 tui_cursor = 0;

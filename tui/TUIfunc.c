@@ -19,7 +19,7 @@
 /* ---------- 내부 헬퍼 ---------- */
 
 /* 하단에 메시지 띄우고 키 입력 대기 */
-static void status_msg(WINDOW *win, const char *msg)
+static void sv_STATUS_MSG(WINDOW *win, const char *msg)
 {
     if (win == NULL) return;
 
@@ -34,7 +34,7 @@ static void status_msg(WINDOW *win, const char *msg)
 }
 
 /* "라벨: " 출력 후 그 자리에서 한 줄 입력받기. 반환값은 입력된 글자 수 */
-static int prompt_line(WINDOW *win, int y, int x, const char *label, char *out, int out_cap)
+static int si_PROMPT_LINE(WINDOW *win, int y, int x, const char *label, char *out, int out_cap)
 {
     echo();
     curs_set(1);
@@ -54,7 +54,7 @@ static int prompt_line(WINDOW *win, int y, int x, const char *label, char *out, 
  * Browse Filesystem 에서 파일을 고르고 't'를 눌렀을 때 호출된다.
  * 파일명은 파라미터로 받으므로 여기서 따로 입력받지 않는다. */
 
-static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
+static int si_TUI_TAG_ASSIGN(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
 {
     if (data_win == NULL || db == NULL || file_name == NULL) return -1;
 
@@ -64,7 +64,7 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
     mvwprintw(data_win, 2, 2, "[ ASSIGN TAG ] %.100s", file_name);
     wrefresh(data_win);
 
-    prompt_line(data_win, 4, 2, "Version (default 1) : ", ver_buf, sizeof(ver_buf));
+    si_PROMPT_LINE(data_win, 4, 2, "Version (default 1) : ", ver_buf, sizeof(ver_buf));
     uint16_t version = (strlen(ver_buf) > 0) ? (uint16_t)atoi(ver_buf) : 1;
     if (version == 0) version = 1;
 
@@ -81,7 +81,7 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
         char label[32];
         snprintf(label, sizeof(label), "  Tag #%d : ", tag_count + 1);
 
-        int len = prompt_line(data_win, 7 + tag_count, 2, label, one_tag, sizeof(one_tag));
+        int len = si_PROMPT_LINE(data_win, 7 + tag_count, 2, label, one_tag, sizeof(one_tag));
         if (len <= 0) break; /* 빈 입력 -> 태그 추가 종료 */
 
         /* 이미 입력한 태그와 중복인지 확인 (대소문자 무시하고 정규화해서 비교) */
@@ -111,7 +111,7 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
     }
 
     if (tag_count == 0) {
-        status_msg(data_win, "CANCELLED: at least 1 tag is required.");
+        sv_STATUS_MSG(data_win, "CANCELLED: at least 1 tag is required.");
         return -1;
     }
 
@@ -124,7 +124,7 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
         snprintf(dup_msg, sizeof(dup_msg),
                  "CANCELLED: identical file '%.100s' (same name & content) already registered (id=%u).",
                  file_name, dup.existing_file_id);
-        status_msg(data_win, dup_msg);
+        sv_STATUS_MSG(data_win, dup_msg);
         return -1;
     }
     if (dup.kind == CORE_DUP_DIFF_NAME_SAME_CONTENT) {
@@ -132,7 +132,7 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
         snprintf(dup_msg, sizeof(dup_msg),
                  "CANCELLED: this exact content is already registered under a different name (id=%u).",
                  dup.existing_file_id);
-        status_msg(data_win, dup_msg);
+        sv_STATUS_MSG(data_win, dup_msg);
         return -1;
     }
 
@@ -150,18 +150,18 @@ static int TUI_do_tag_assign(WINDOW *data_win, archdb_t *db, const char *full_pa
         snprintf(result_msg, sizeof(result_msg),
                  "ERROR: failed to register '%s'.", file_name);
     }
-    status_msg(data_win, result_msg);
+    sv_STATUS_MSG(data_win, result_msg);
 
     return (new_id != ARCHDB_INVALID_ID) ? 0 : -1;
 }
 
-/* 파일에 걸린 태그를 트림된 문자열로 모으는 콜백 (TUI_do_untag_file 전용) */
+/* 파일에 걸린 태그만을 트림된 문자열로 모으는 콜백 (TUI_UNTAG_FILE 전용) */
 typedef struct {
     char tags[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
     int  count;
 } untag_collect_ctx_t;
 
-static int untag_collect_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
+static int si_UNTAG_COLLECT_CB(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ctx_v)
 {
     (void)file_id;
     untag_collect_ctx_t *ctx = (untag_collect_ctx_t *)ctx_v;
@@ -180,13 +180,13 @@ static int untag_collect_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], vo
 
 /* 파일에 걸린 태그 중 하나를 골라서 떼어낸다 (파일 자체는 삭제 안 함).
  * 태그 목록을 SECTOR_MENU_WIN으로 보여주고 하나 고르면 core_untag_file 호출. */
-static void TUI_do_untag_file(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
+static void TUI_UNTAG_FILE(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
 {
     untag_collect_ctx_t ctx = { .count = 0 };
-    db_tag_foreach_by_file(db, file_id, untag_collect_cb, &ctx);
+    db_tag_foreach_by_file(db, file_id, si_UNTAG_COLLECT_CB, &ctx);
 
     if (ctx.count == 0) {
-        status_msg(data_win, "ERROR: no tags found for this file.");
+        sv_STATUS_MSG(data_win, "ERROR: no tags found for this file.");
         return;
     }
 
@@ -221,14 +221,14 @@ static void TUI_do_untag_file(WINDOW *data_win, archdb_t *db, uint32_t file_id, 
         } else {
             snprintf(msg, sizeof(msg), "ERROR: cannot remove last remaining tag from '%.100s'.", file_name);
         }
-        status_msg(data_win, msg);
+        sv_STATUS_MSG(data_win, msg);
         return;
     }
 }
 
 /* 파일을 완전히 삭제한다 (태그 전부 해제 + 파일 레코드 자체 삭제).
  * 되돌릴 수 없는 동작이라 y/n 확인을 받는다. */
-static void TUI_do_unregister_file(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
+static void TUI_UNREGISTER_FILE(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
 {
     char prompt[220];
     snprintf(prompt, sizeof(prompt), "Delete '%.100s' from archive? This cannot be undone. (y/n)", file_name);
@@ -239,7 +239,7 @@ static void TUI_do_unregister_file(WINDOW *data_win, archdb_t *db, uint32_t file
 
     int ch = wgetch(data_win);
     if (ch != 'y' && ch != 'Y') {
-        status_msg(data_win, "CANCELLED.");
+        sv_STATUS_MSG(data_win, "CANCELLED.");
         return;
     }
 
@@ -250,12 +250,12 @@ static void TUI_do_unregister_file(WINDOW *data_win, archdb_t *db, uint32_t file
     } else {
         snprintf(msg, sizeof(msg), "ERROR: failed to delete '%.100s'.", file_name);
     }
-    status_msg(data_win, msg);
+    sv_STATUS_MSG(data_win, msg);
 }
 
 /* ---------- [1] Search Tag ---------- */
 
-int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db)
+int TUI_SEARCH_TAG(WINDOW *data_win, archdb_t *db)
 {
     if (data_win == NULL || db == NULL) return -1;
 
@@ -273,7 +273,7 @@ int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db)
         char label[32];
         snprintf(label, sizeof(label), "  Tag #%d : ", tag_count + 1);
 
-        int len = prompt_line(data_win, 4 + tag_count, 2, label, one_tag, sizeof(one_tag));
+        int len = si_PROMPT_LINE(data_win, 4 + tag_count, 2, label, one_tag, sizeof(one_tag));
         if (len <= 0) break;
 
         memcpy(tags_buf[tag_count], one_tag, sizeof(one_tag));
@@ -282,7 +282,7 @@ int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db)
     }
 
     if (tag_count == 0) {
-        status_msg(data_win, "CANCELLED: at least 1 tag is required.");
+        sv_STATUS_MSG(data_win, "CANCELLED: at least 1 tag is required.");
         return -1;
     }
 
@@ -319,12 +319,12 @@ int TUI_handle_search_tag(WINDOW *data_win, archdb_t *db)
     return 0;
 }
 
-/* ---------- [3] Browse (Folder View) ---------- */
+/* ---------- [3] Browse (TAG Folder View) ---------- */
 
-#define BROWSE_MAX_FILES  256
+#define BROWSE_MAX_FILES  128
 #define BROWSE_MAX_ITEMS  (1 + CORE_MAX_CHILD_TAGS + BROWSE_MAX_FILES)
 
-int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
+int TUI_BROWSE_TAG_FOLDER_VIEW(WINDOW *data_win, archdb_t *db)
 {
     if (data_win == NULL || db == NULL) return -1;
 
@@ -347,7 +347,7 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
         int has_up = (selected_count > 0);
 
         /* 화면에 뿌릴 아이템 라벨 구성: [..] -> [DIR] 태그들 -> 파일들 */
-        char item_bufs[BROWSE_MAX_ITEMS][200];
+        char item_bufs[BROWSE_MAX_ITEMS][150];
         const char *item_ptrs[BROWSE_MAX_ITEMS];
         int idx = 0;
 
@@ -429,7 +429,7 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
                 int fi = sel - file_start;
                 file_record_t rec;
                 if (db_file_read(db, file_ids[fi], &rec) == 0) {
-                    TUI_do_untag_file(data_win, db, file_ids[fi], rec.file_name);
+                    TUI_UNTAG_FILE(data_win, db, file_ids[fi], rec.file_name);
                 }
             }
             continue;
@@ -442,7 +442,7 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
                 int fi = sel - file_start;
                 file_record_t rec;
                 if (db_file_read(db, file_ids[fi], &rec) == 0) {
-                    TUI_do_unregister_file(data_win, db, file_ids[fi], rec.file_name);
+                    TUI_UNREGISTER_FILE(data_win, db, file_ids[fi], rec.file_name);
                 }
             }
             continue;
@@ -478,7 +478,7 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
                 char msg[400];
                 snprintf(msg, sizeof(msg), "id=%u  %s  v%u  path=/%s",
                          rec.file_id, rec.file_name, rec.version, full_path);
-                status_msg(data_win, msg);
+                sv_STATUS_MSG(data_win, msg);
             }
             continue;
         }
@@ -489,26 +489,26 @@ int TUI_handle_browse(WINDOW *data_win, archdb_t *db)
 
 /* ---------- [4] Browse Filesystem (절대경로 파일 탐색기) ---------- */
 
-#define FS_MAX_ITEMS  256
+#define FS_MAX_ITEMS  128
 #define FS_PATH_MAX   1024
 
 /* 파일을 선택했을 때 호출되는 지점.
  * TODO: 나중에 여기서 태그 할당 / 태그 수정 / 삭제 메뉴를 띄울 예정.
- * 지금은 정보만 보여준다. */
-static void fs_on_file_selected(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
+ * 지금은 정보만 보여준다. FS_FILE_SELECTED*/
+static void sv_FS_FILE_SELECTED(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
 {
     (void)db; /* 태그 기능 붙이면 여기서 core_register_file 등에 사용 */
 
     char msg[1600];
     snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [tag 기능은 추후 지원]", file_name, full_path);
-    status_msg(data_win, msg);
+    sv_STATUS_MSG(data_win, msg);
 }
 
-int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
+int TUI_BROWSE_FS(WINDOW *data_win, archdb_t *db)
 {
     if (data_win == NULL || db == NULL) return -1;
     if (ARCHIVE_HOME_PATH == NULL) {
-        status_msg(data_win, "ERROR: ARCHIVE_HOME_PATH not loaded (LOAD_CONFIG 먼저 호출 필요).");
+        sv_STATUS_MSG(data_win, "ERROR: ARCHIVE_HOME_PATH not loaded (LOAD_CONFIG 먼저 호출 필요).");
         return -1;
     }
 
@@ -521,7 +521,7 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
     while (1) {
         DIR *d = opendir(current_path);
         if (d == NULL) {
-            status_msg(data_win, "ERROR: cannot open directory.");
+            sv_STATUS_MSG(data_win, "ERROR: cannot open directory.");
             return -1;
         }
 
@@ -549,7 +549,7 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
         }
         closedir(d);
 
-        char item_bufs[FS_MAX_ITEMS][300];
+        char item_bufs[FS_MAX_ITEMS][260];
         const char *item_ptrs[FS_MAX_ITEMS];
         for (int i = 0; i < count; i++) {
             snprintf(item_bufs[i], sizeof(item_bufs[i]), "%s%s", names[i], is_dir[i] ? "/" : "");
@@ -571,23 +571,28 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
 
         int result = SECTOR_MENU_WIN(data_win, current_path, item_ptrs, count, &cursor, SIGN_LEFT_ALIGN);
 
-        if (result == SIGN_KEY_CHANGED || result == SIGN_REFRESH) continue;
+        switch (result) {
+            case SIGN_KEY_CHANGED:
+            case SIGN_REFRESH:
+            case SIGN_DELETE:       /* 삭제는 아직 미구현 */
+            case SIGN_UNREGISTER:   /* 파일탐색기에서는 'x' 동작 없음 (등록 해제는 태그 폴더뷰에서) */
+                continue;
 
-        if (result == SIGN_CANCEL) break; /* 파일탐색기 종료 -> 메인 메뉴 */
+            case SIGN_CANCEL:       /* 파일탐색기 종료 -> 메인 메뉴 */
+                return 0;
 
-        if (result == SIGN_DELETE) continue; /* 삭제는 아직 미구현 */
-
-        if (result == SIGN_UNREGISTER) continue; /* 파일탐색기에서는 'x' 동작 없음 (등록 해제는 태그 폴더뷰에서) */
-
-        if (result == SIGN_TAG_ASSIGN) {
-            /* 't' 키: 현재 커서가 가리키는 항목이 파일이면 태그 할당 창 호출 */
-            int sel = cursor;
-            if (sel >= 0 && sel < count && !is_dir[sel] && strcmp(names[sel], "..") != 0) {
-                char full[FS_PATH_MAX + 256];
-                snprintf(full, sizeof(full), "%s/%s", current_path, names[sel]);
-                TUI_do_tag_assign(data_win, db, full, names[sel]);
+            case SIGN_TAG_ASSIGN: { /* 't' 키: 현재 커서가 가리키는 항목이 파일이면 태그 할당 창 호출 */
+                int sel = cursor;
+                if (sel >= 0 && sel < count && !is_dir[sel] && strcmp(names[sel], "..") != 0) {
+                    char full[FS_PATH_MAX + 256];
+                    snprintf(full, sizeof(full), "%s/%s", current_path, names[sel]);
+                    si_TUI_TAG_ASSIGN(data_win, db, full, names[sel]);
+                }
+                continue;
             }
-            continue;
+
+            default:
+                break;
         }
 
         int sel = result;
@@ -608,7 +613,7 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
             char next_path[FS_PATH_MAX];
             int written = snprintf(next_path, sizeof(next_path), "%s/%s", current_path, names[sel]);
             if (written < 0 || written >= (int)sizeof(next_path)) {
-                status_msg(data_win, "ERROR: path too long, cannot enter this directory.");
+                sv_STATUS_MSG(data_win, "ERROR: path too long, cannot enter this directory.");
                 continue;
             }
             memcpy(current_path, next_path, (size_t)written + 1);
@@ -620,7 +625,7 @@ int TUI_handle_browse_fs(WINDOW *data_win, archdb_t *db)
         {
             char full[FS_PATH_MAX + 256];
             snprintf(full, sizeof(full), "%s/%s", current_path, names[sel]);
-            fs_on_file_selected(data_win, db, full, names[sel]);
+            sv_FS_FILE_SELECTED(data_win, db, full, names[sel]);
         }
     }
 
