@@ -1,9 +1,14 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <locale.h>
+
+#include "TUIcommon.h"
+#include "TUIsearchTag.h"
+#include "TUIbrowseTag.h"
+#include "TUIbrowseFS.h"
+
 #include "UI_PRINT.h"
 #include "SECTOR_MENU.h"
-#include "TUIfunc.h"
 #include "PATH_CONFIG.h"
 #include "core.h"
 
