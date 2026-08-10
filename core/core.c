@@ -13,7 +13,7 @@
  *  경로 파싱
  * ============================================================ */
 
-int core_path_split(const char *path, char tags_out[][ARCHDB_TAG_LEN + 1], int max_tags)
+int CORE_PATH_SPLIT(const char *path, char tags_out[][ARCHDB_TAG_LEN + 1], int max_tags)
 {
     if (path == NULL) return 0;
 
@@ -71,7 +71,7 @@ static int build_path_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void 
     return 0;
 }
 
-int core_file_path(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len)
+int CORE_FILE_PATH(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len)
 {
     if (buf == NULL || buf_len == 0) return -1;
     buf[0] = '\0';
@@ -86,7 +86,7 @@ int core_file_path(archdb_t *db, uint32_t file_id, char *buf, size_t buf_len)
  *  등록
  * ============================================================ */
 
-uint32_t core_register_file(archdb_t *db, const char *file_name, uint16_t version,
+uint32_t CORE_REGISTER_FILE(archdb_t *db, const char *file_name, uint16_t version,
                              uint64_t content_hash, const char **tags, int tag_count)
 {
     if (file_name == NULL || file_name[0] == '\0') return 0;
@@ -124,7 +124,7 @@ static int has_tag_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ct
     return 0;
 }
 
-int core_file_has_tag(archdb_t *db, uint32_t file_id, const char *tag)
+int CORE_FILE_HAS_TAG(archdb_t *db, uint32_t file_id, const char *tag)
 {
     has_tag_ctx_t ctx = { file_id, 0 };
     db_tag_foreach_by_tag(db, tag, has_tag_cb, &ctx);
@@ -145,7 +145,7 @@ static int collect_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void *ct
     return 0;
 }
 
-int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *out_ids, int max_ids)
+int CORE_LIST_BY_TAGS(archdb_t *db, const char **tags, int tag_count, uint32_t *out_ids, int max_ids)
 {
     if (tag_count <= 0) return 0;
 
@@ -158,7 +158,7 @@ int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *
     for (int t = 1; t < tag_count; t++) {
         int w = 0;
         for (int i = 0; i < result_count; i++) {
-            if (core_file_has_tag(db, out_ids[i], tags[t])) {
+            if (CORE_FILE_HAS_TAG(db, out_ids[i], tags[t])) {
                 out_ids[w++] = out_ids[i];
             }
         }
@@ -167,27 +167,27 @@ int core_list_by_tags(archdb_t *db, const char **tags, int tag_count, uint32_t *
     return result_count;
 }
 
-int core_list_by_path(archdb_t *db, const char *path, uint32_t *out_ids, int max_ids)
+int CORE_LIST_BY_PATH(archdb_t *db, const char *path, uint32_t *out_ids, int max_ids)
 {
     char tags_buf[CORE_MAX_PATH_TAGS][ARCHDB_TAG_LEN + 1];
-    int tag_count = core_path_split(path, tags_buf, CORE_MAX_PATH_TAGS);
+    int tag_count = CORE_PATH_SPLIT(path, tags_buf, CORE_MAX_PATH_TAGS);
     if (tag_count == 0) return 0;
 
     const char *tag_ptrs[CORE_MAX_PATH_TAGS];
     for (int i = 0; i < tag_count; i++) tag_ptrs[i] = tags_buf[i];
 
-    return core_list_by_tags(db, tag_ptrs, tag_count, out_ids, max_ids);
+    return CORE_LIST_BY_TAGS(db, tag_ptrs, tag_count, out_ids, max_ids);
 }
 
 /* ============================================================
  *  폴더뷰(파일 탐색기 스타일 브라우징)
  * ============================================================ */
 
-int core_list_files_in_view(archdb_t *db, const char **selected_tags, int selected_count,
+int CORE_LIST_FILES_IN_VIEW(archdb_t *db, const char **selected_tags, int selected_count,
                              uint32_t *out_ids, int max_ids)
 {
     if (selected_count <= 0) return 0; /* 정책: 태그 없는 파일은 없으므로 최상위엔 파일 없음 */
-    return core_list_by_tags(db, selected_tags, selected_count, out_ids, max_ids);
+    return CORE_LIST_BY_TAGS(db, selected_tags, selected_count, out_ids, max_ids);
 }
 
 /* out_tags 안에서 트림된 태그 문자열로 이미 등록돼 있는 인덱스를 찾는다. 없으면 -1 */
@@ -280,7 +280,7 @@ static int child_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void 
     return 0;
 }
 
-int core_list_child_tags(archdb_t *db, const char **selected_tags, int selected_count,
+int CORE_LIST_CHILD_TAGS(archdb_t *db, const char **selected_tags, int selected_count,
                           core_child_tag_t *out_tags, int max_tags)
 {
     if (selected_count <= 0) {
@@ -291,7 +291,7 @@ int core_list_child_tags(archdb_t *db, const char **selected_tags, int selected_
 
     /* 현재 선택된 태그를 모두 만족하는 파일들을 찾고, 그 파일들이 가진 다른 태그를 모은다 */
     uint32_t file_ids[256];
-    int file_n = core_list_by_tags(db, selected_tags, selected_count, file_ids, 256);
+    int file_n = CORE_LIST_BY_TAGS(db, selected_tags, selected_count, file_ids, 256);
 
     child_tags_ctx_t ctx = { out_tags, max_tags, 0, selected_tags, selected_count };
     for (int i = 0; i < file_n; i++) {
@@ -320,7 +320,7 @@ static int collect_all_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN],
     return 0;
 }
 
-int core_delete_file(archdb_t *db, uint32_t file_id)
+int CORE_DELETE_FILE(archdb_t *db, uint32_t file_id)
 {
     if (db == NULL || file_id == ARCHDB_INVALID_ID) return -1;
 
@@ -334,7 +334,7 @@ int core_delete_file(archdb_t *db, uint32_t file_id)
     return db_file_delete(db, file_id);
 }
 
-uint32_t core_unregister_file(archdb_t *db, const char *file_name, uint16_t version,
+uint32_t CORE_UNREGISTER_FILE(archdb_t *db, const char *file_name, uint16_t version,
                                const char **tags, int tag_count)
 {
     if (file_name == NULL || file_name[0] == '\0') return 0;
@@ -342,7 +342,7 @@ uint32_t core_unregister_file(archdb_t *db, const char *file_name, uint16_t vers
 
     /* 주어진 태그를 모두 가진 파일들 중에서 이름+버전이 일치하는 것만 후보로 좁힌다 */
     uint32_t candidates[64];
-    int n = core_list_by_tags(db, tags, tag_count, candidates, 64);
+    int n = CORE_LIST_BY_TAGS(db, tags, tag_count, candidates, 64);
 
     uint32_t target = ARCHDB_INVALID_ID;
     int match_count = 0;
@@ -359,7 +359,7 @@ uint32_t core_unregister_file(archdb_t *db, const char *file_name, uint16_t vers
     /* 정확히 1개로 특정되지 않으면(못 찾았거나, 조건이 겹쳐서 여러 개 걸리면) 안전하게 취소 */
     if (match_count != 1) return 0;
 
-    if (core_delete_file(db, target) != 0) return 0;
+    if (CORE_DELETE_FILE(db, target) != 0) return 0;
 
     return target;
 }
@@ -379,7 +379,7 @@ static int count_tags_cb(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], void 
     return 0;
 }
 
-int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag)
+int CORE_UNTAG_FILE(archdb_t *db, uint32_t file_id, const char *tag)
 {
     if (db == NULL || file_id == ARCHDB_INVALID_ID || tag == NULL) return -1;
 
@@ -395,7 +395,7 @@ int core_untag_file(archdb_t *db, uint32_t file_id, const char *tag)
  *  내용 기반 중복 검사
  * ============================================================ */
 
-uint64_t core_hash_file(const char *full_path)
+uint64_t CORE_HASH_FILE(const char *full_path)
 {
     if (full_path == NULL) return 0;
 
@@ -467,7 +467,7 @@ static int dup_check_cb(const file_record_t *rec, void *ctx_v)
     return 0;
 }
 
-core_dup_result_t core_check_duplicate_content(archdb_t *db, uint64_t content_hash, const char *file_name)
+core_dup_result_t CORE_CHECK_DUP_CONTENT(archdb_t *db, uint64_t content_hash, const char *file_name)
 {
     core_dup_result_t result = { CORE_DUP_NONE, ARCHDB_INVALID_ID };
     if (content_hash == 0 || file_name == NULL) return result; /* 해시 계산 실패 - 검사 스킵 */

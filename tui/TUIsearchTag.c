@@ -1,7 +1,7 @@
 #include "TUIsearchTag.h"
 #include "TUIcommon.h"     /* PROMPT_LINE, STATUS_MSG */
 #include "UI_PRINT.h"      /* UI_CLEAR_WINDOW */
-#include "core.h"          /* core_list_by_tags, core_file_path */
+#include "core.h"          /* CORE_LIST_BY_TAGS, CORE_FILE_PATH */
 
 #include <string.h>
 #include <stdio.h>
@@ -39,7 +39,7 @@ int TUI_SEARCH_TAG(WINDOW *data_win, archdb_t *db)
     }
 
     uint32_t ids[64];
-    int n = core_list_by_tags(db, tag_ptrs, tag_count, ids, 64);
+    int n = CORE_LIST_BY_TAGS(db, tag_ptrs, tag_count, ids, 64);
 
     char joined_tags[128] = {0};
     int jw = 0;
@@ -59,7 +59,7 @@ int TUI_SEARCH_TAG(WINDOW *data_win, archdb_t *db)
         if (db_file_read(db, ids[i], &rec) != 0) continue;
 
         char full_path[128] = {0};
-        core_file_path(db, ids[i], full_path, sizeof(full_path));
+        CORE_FILE_PATH(db, ids[i], full_path, sizeof(full_path));
 
         mvwprintw(data_win, 4 + i, 2, "[id=%u] %-30s v%u  (%s)",
                   rec.file_id, rec.file_name, rec.version, full_path);

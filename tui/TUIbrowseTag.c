@@ -2,7 +2,7 @@
 #include "TUIcommon.h"     /* STATUS_MSG, TUI_UNTAG_FILE, TUI_UNREGISTER_FILE */
 #include "UI_PRINT.h"
 #include "SECTOR_MENU.h"   /* SECTOR_MENU_WIN, SIGN_* */
-#include "core.h"          /* core_list_child_tags, core_list_files_in_view */
+#include "core.h"          /* CORE_LIST_CHILD_TAGS, CORE_LIST_FILES_IN_VIEW */
 
 #include <string.h>
 #include <stdio.h>
@@ -24,11 +24,11 @@ int TUI_BROWSE_TAG_FOLDER_VIEW(WINDOW *data_win, archdb_t *db)
     while (1) {
         /* 현재 위치(selected_ptrs) 기준으로 하위 태그 + 파일 목록 다시 계산 */
         core_child_tag_t child_tags[CORE_MAX_CHILD_TAGS];
-        int child_n = core_list_child_tags(db, selected_ptrs, selected_count, child_tags, CORE_MAX_CHILD_TAGS);
+        int child_n = CORE_LIST_CHILD_TAGS(db, selected_ptrs, selected_count, child_tags, CORE_MAX_CHILD_TAGS);
 
         uint32_t file_ids[BROWSE_MAX_FILES];
         int file_n = (selected_count > 0)
-            ? core_list_files_in_view(db, selected_ptrs, selected_count, file_ids, BROWSE_MAX_FILES)
+            ? CORE_LIST_FILES_IN_VIEW(db, selected_ptrs, selected_count, file_ids, BROWSE_MAX_FILES)
             : 0;
 
         int has_up = (selected_count > 0);
@@ -161,7 +161,7 @@ int TUI_BROWSE_TAG_FOLDER_VIEW(WINDOW *data_win, archdb_t *db)
             file_record_t rec;
             if (db_file_read(db, file_ids[fi], &rec) == 0) {
                 char full_path[128] = {0};
-                core_file_path(db, file_ids[fi], full_path, sizeof(full_path));
+                CORE_FILE_PATH(db, file_ids[fi], full_path, sizeof(full_path));
                 char msg[400];
                 snprintf(msg, sizeof(msg), "id=%u  %s  v%u  path=/%s",
                          rec.file_id, rec.file_name, rec.version, full_path);

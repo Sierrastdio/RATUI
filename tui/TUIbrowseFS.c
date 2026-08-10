@@ -19,7 +19,7 @@
  * 지금은 정보만 보여준다. FS_FILE_SELECTED*/
 void FS_FILE_SELECTED(WINDOW *data_win, archdb_t *db, const char *full_path, const char *file_name)
 {
-    (void)db; /* 태그 기능 붙이면 여기서 core_register_file 등에 사용 */
+    (void)db; /* 태그 기능 붙이면 여기서 CORE_REGISTER_FILE 등에 사용 */
 
     char msg[1600];
     snprintf(msg, sizeof(msg), "SELECTED: %.255s  (path=%.1200s)  [tag 기능은 추후 지원]", file_name, full_path);

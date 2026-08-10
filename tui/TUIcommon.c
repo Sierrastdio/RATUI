@@ -109,8 +109,8 @@ int TUI_TAG_ASSIGN(WINDOW *data_win, archdb_t *db, const char *full_path, const 
     }
 
     /* 실제 파일 내용을 해시해서, 이름 또는 내용이 겹치는 기존 등록이 있는지 확인 */
-    uint64_t content_hash = core_hash_file(full_path);
-    core_dup_result_t dup = core_check_duplicate_content(db, content_hash, file_name);
+    uint64_t content_hash = CORE_HASH_FILE(full_path);
+    core_dup_result_t dup = CORE_CHECK_DUP_CONTENT(db, content_hash, file_name);
 
     if (dup.kind == CORE_DUP_SAME_NAME_SAME_CONTENT) {
         char dup_msg[300];
@@ -129,7 +129,7 @@ int TUI_TAG_ASSIGN(WINDOW *data_win, archdb_t *db, const char *full_path, const 
         return -1;
     }
 
-    uint32_t new_id = core_register_file(db, file_name, version, content_hash, tag_ptrs, tag_count);
+    uint32_t new_id = CORE_REGISTER_FILE(db, file_name, version, content_hash, tag_ptrs, tag_count);
 
     char result_msg[512];
     if (new_id != ARCHDB_INVALID_ID) {
@@ -172,7 +172,7 @@ static int UNTAG_COLLECT_CB(uint32_t file_id, const char tag[ARCHDB_TAG_LEN], vo
 }
 
 /* 파일에 걸린 태그 중 하나를 골라서 떼어낸다 (파일 자체는 삭제 안 함).
- * 태그 목록을 SECTOR_MENU_WIN으로 보여주고 하나 고르면 core_untag_file 호출. */
+ * 태그 목록을 SECTOR_MENU_WIN으로 보여주고 하나 고르면 CORE_UNTAG_FILE 호출. */
 void TUI_UNTAG_FILE(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char *file_name)
 {
     untag_collect_ctx_t ctx = { .count = 0 };
@@ -207,7 +207,7 @@ void TUI_UNTAG_FILE(WINDOW *data_win, archdb_t *db, uint32_t file_id, const char
 
         if (result < 0 || result >= ctx.count) return;
 
-        int rc = core_untag_file(db, file_id, ctx.tags[result]);
+        int rc = CORE_UNTAG_FILE(db, file_id, ctx.tags[result]);
         char msg[200];
         if (rc == 0) {
             snprintf(msg, sizeof(msg), "REMOVED: tag '%s' from '%.100s'", ctx.tags[result], file_name);
@@ -236,7 +236,7 @@ void TUI_UNREGISTER_FILE(WINDOW *data_win, archdb_t *db, uint32_t file_id, const
         return;
     }
 
-    int rc = core_delete_file(db, file_id);
+    int rc = CORE_DELETE_FILE(db, file_id);
     char msg[220];
     if (rc == 0) {
         snprintf(msg, sizeof(msg), "DELETED: '%.100s' removed from archive (tags + record).", file_name);
